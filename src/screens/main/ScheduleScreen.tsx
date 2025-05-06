@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import { Text, useTheme, Card, Title, Paragraph, ActivityIndicator, Button, FAB, Snackbar } from 'react-native-paper';
+import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { auth, db } from '../../../firebase';
 import { Course } from '../../types';
-import { tufsCourses, timeSlots } from '../../data/tufsCourses';
+import { timeSlots } from '../../data/tufsCourses';
 import { useSchedule } from '../../context/ScheduleContext';
 
 type ScheduleScreenProps = {
@@ -15,7 +13,7 @@ type ScheduleScreenProps = {
 };
 
 const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenProps) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   
@@ -29,6 +27,14 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const days = ['月', '火', '水', '木', '金'];
   // Number of periods (時限)
   const periods = [1, 2, 3, 4, 5];
+  // 時間帯の表示
+  const periodTimes = {
+    1: '08:30',
+    2: '10:10',
+    3: '12:40',
+    4: '14:20',
+    5: '16:00'
+  };
 
   useEffect(() => {
     // ユーザーの授業が読み込まれたらローディングを終了
@@ -80,7 +86,6 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
                 styles.dayCell, 
                 { 
                   width: screenWidth * 0.17,
-                  backgroundColor: '#f5f5f5'
                 }
               ]}
             >
@@ -93,9 +98,8 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
         {periods.map((period) => (
           <View key={`period-${period}`} style={styles.periodRow}>
             {/* Time cell */}
-            <View style={[styles.timeCell, { width: screenWidth * 0.15, backgroundColor: '#f5f5f5' }]}>
-              <Text style={styles.periodNumber}>{period}</Text>
-              <Text style={styles.timeText}>{timeSlots[period]}</Text>
+            <View style={[styles.timeCell, { width: screenWidth * 0.15 }]}>
+              <Text style={styles.timeText}>{periodTimes[period]}</Text>
             </View>
             
             {/* Course cells for each day */}
@@ -109,37 +113,54 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
                     styles.courseCell, 
                     { 
                       width: screenWidth * 0.17,
-                      backgroundColor: course ? course.color : '#ffffff'
+                      backgroundColor: course ? course.color || '#ffffff' : '#ffffff',
+                      borderWidth: 0.5,
+                      borderColor: '#e0e0e0'
                     }
                   ]}
                   onPress={() => {
                     if (course) {
                       // 授業の詳細を表示または削除
-                      handleRemoveCourse(course.id);
+                      Alert.alert(
+                        course.name,
+                        `教員: ${course.professor}\n教室: ${course.room}`,
+                        [
+                          {
+                            text: '閉じる',
+                            style: 'cancel',
+                          },
+                          {
+                            text: '削除',
+                            onPress: () => handleRemoveCourse(course.id),
+                            style: 'destructive',
+                          },
+                          {
+                            text: '詳細',
+                            onPress: () => navigation.navigate('CourseDetail', { courseId: course.id }),
+                          },
+                        ]
+                      );
                     } else {
-                      // 授業がない場合は履修検索画面に遷移
-                      navigation.navigate('Courses');
-                    }
-                  }}
-                  onLongPress={() => {
-                    if (course) {
-                      handleRemoveCourse(course.id);
+                      // 空のセルをタップした場合、授業追加画面に遷移
+                      navigation.navigate('Courses', { 
+                        filterDay: dayIndex + 1, 
+                        filterPeriod: period 
+                      });
                     }
                   }}
                 >
-                  {course ? (
+                  {course && (
                     <View style={styles.courseCellContent}>
+                      {course.room && (
+                        <Text style={styles.courseIdText}>
+                          {course.room}
+                        </Text>
+                      )}
                       <Text style={styles.courseText} numberOfLines={2}>
                         {course.name}
                       </Text>
-                      <Text style={styles.professorText} numberOfLines={1}>
-                        {course.professor}
-                      </Text>
-                      <Text style={styles.roomText} numberOfLines={1}>
-                        {course.room}
-                      </Text>
                     </View>
-                  ) : null}
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -150,32 +171,7 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>東京外国語大学</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="notifications-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="person-outline" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      <View style={styles.subHeader}>
-        <Text style={styles.subHeaderTitle}>時間割管理</Text>
-        <Button 
-          mode="contained" 
-          icon="export" 
-          onPress={() => {}} 
-          style={styles.exportButton}
-          labelStyle={styles.exportButtonLabel}
-        >
-          エクスポート
-        </Button>
-      </View>
-      
+    <View style={styles.container}>
       <ScrollView 
         contentContainerStyle={styles.scrollViewContent}
         showsVerticalScrollIndicator={true}
@@ -209,7 +205,7 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
       
       <FAB
         style={styles.fab}
-        icon="plus"
+        icon="magnify"
         color="#fff"
         onPress={() => navigation.navigate('Courses')}
       />
@@ -229,93 +225,59 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#e75480',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-  },
-  iconButton: {
-    marginLeft: 16,
-  },
-  subHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  subHeaderTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  exportButton: {
-    backgroundColor: '#e75480',
-  },
-  exportButtonLabel: {
-    fontSize: 14,
+    backgroundColor: '#f5f5f5',
   },
   scrollViewContent: {
-    padding: 16,
+    padding: 0,
     paddingBottom: 32,
   },
   tableCard: {
-    borderRadius: 8,
-    overflow: 'hidden',
+    borderRadius: 0,
+    elevation: 0,
+    margin: 0,
   },
   tableContainer: {
-    padding: 8,
+    padding: 0,
   },
   headerRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
   },
   dayCell: {
     alignItems: 'center',
-    padding: 8,
-    borderRadius: 4,
-    margin: 1,
+    justifyContent: 'center',
+    padding: 10,
+    flex: 1,
   },
   dayText: {
     fontWeight: 'bold',
     fontSize: 16,
+    color: '#333',
   },
   periodRow: {
     flexDirection: 'row',
-    marginBottom: 2,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e0e0e0',
   },
   timeCell: {
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 8,
-    borderRadius: 4,
-    margin: 1,
-  },
-  periodNumber: {
-    fontWeight: 'bold',
-    fontSize: 16,
+    borderRightWidth: 1,
+    borderRightColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
   },
   timeText: {
     fontSize: 12,
     color: '#666',
   },
   courseCell: {
-    height: 100,
-    borderWidth: 0,
-    borderRadius: 4,
-    padding: 4,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    margin: 1,
-    elevation: 1,
+    flex: 1,
   },
   courseCellContent: {
     width: '100%',
@@ -324,21 +286,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 4,
   },
-  courseText: {
+  courseIdText: {
     fontWeight: 'bold',
     fontSize: 12,
     textAlign: 'center',
-    marginBottom: 4,
-  },
-  professorText: {
-    fontSize: 10,
-    textAlign: 'center',
     marginBottom: 2,
+    color: '#333',
   },
-  roomText: {
-    fontSize: 10,
+  courseText: {
+    fontSize: 11,
     textAlign: 'center',
-    color: '#666',
+    color: '#333',
   },
   loadingContainer: {
     flex: 1,
