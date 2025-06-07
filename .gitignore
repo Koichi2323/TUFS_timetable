@@ -8,6 +8,7 @@ yarn-error.log
 .expo/
 web-build/
 dist/
+build/
 *.jks
 *.p8
 *.p12
@@ -20,7 +21,7 @@ dist/
 
 # IDE
 .idea/
-.vscode/
+# .vscode/ # Keep user-specific vscode settings local, or manage shared settings carefully
 *.swp
 *.swo
 
@@ -29,8 +30,9 @@ dist/
 *.bundle.map
 
 # Firebase
-google-services.json
-GoogleService-Info.plist
+# google-services.json and GoogleService-Info.plist are often gitignored for security.
+# If they are already committed and you intend to keep them, leave as is.
+# .firebaserc and firebase.json are usually committed.
 
 # Environment variables
 .env
@@ -38,3 +40,20 @@ GoogleService-Info.plist
 .env.development.local
 .env.test.local
 .env.production.local
+
+# TypeScript specific / Build outputs
+# Ignore JavaScript files within the src directory, common for TS projects
+src/**/*.js
+# If firebase.js is in the project root, this rule for src/ won't affect it.
+# If firebase.js is at src/firebase.js and needs to be tracked, uncomment and adjust:
+# !src/firebase.js 
+
+# Other specific files/directories to ignore
+Firebase SDK.rtf
+tufs-timetable-web/
+
+# Firebase cache/temp files
+.firebase/
+
+# Old or unused root App.js (if App.tsx is primary)
+App.js

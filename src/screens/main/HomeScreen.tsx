@@ -98,7 +98,7 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
       return (
         <Card style={styles.emptyCard}>
           <Card.Content style={styles.emptyCardContent}>
-            <Ionicons name="calendar-outline" size={48} color="#e75480" />
+            <Ionicons name="calendar-outline" size={48} color="#f06292" />
             <Paragraph style={{ textAlign: 'center', marginTop: 10 }}>
               今日の授業はありません
             </Paragraph>
@@ -110,7 +110,7 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
     return upcomingCourses.map((course: any) => (
       <Card 
         key={course.id} 
-        style={[styles.courseCard, { borderLeftWidth: 5, borderLeftColor: course.color || '#e75480' }]}
+        style={[styles.courseCard, { borderLeftWidth: 5, borderLeftColor: course.color || '#f06292' }]}
         onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
       >
         <Card.Content>
@@ -140,7 +140,7 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
     if (assignments.length === 0) {
       return (
         <View style={styles.emptyAssignments}>
-          <Ionicons name="checkmark-circle-outline" size={48} color="#e75480" />
+          <Ionicons name="checkmark-circle-outline" size={48} color="#f06292" />
           <Paragraph style={{ textAlign: 'center', marginTop: 10 }}>
             期限が近い課題はありません
           </Paragraph>
@@ -185,10 +185,10 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
       >
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: '#e75480' }]}>東京外国語大学</Text>
+            <Text style={[styles.greeting, { color: '#f06292' }]}>東京外国語大学</Text>
           </View>
           <TouchableOpacity onPress={toggleTheme} style={{ display: 'none' }}>
-            <Ionicons name={isDarkMode ? 'sunny' : 'moon'} size={24} color="#e75480" />
+            <Ionicons name={isDarkMode ? 'sunny' : 'moon'} size={24} color="#f06292" />
           </TouchableOpacity>
         </View>
 
@@ -204,7 +204,7 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: theme.colors.onBackground }]}>直近の課題</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Assignments')} style={{ display: 'none' }}>
-              <Text style={[styles.seeAll, { color: '#e75480' }]}>すべて表示</Text>
+              <Text style={[styles.seeAll, { color: '#f06292' }]}>すべて表示</Text>
             </TouchableOpacity>
           </View>
           {renderAssignments()}
@@ -212,7 +212,7 @@ const HomeScreen = ({ navigation, toggleTheme, isDarkMode }: HomeScreenProps) =>
       </ScrollView>
 
       <FAB
-        style={[styles.fab, { backgroundColor: '#e75480' }]}
+        style={[styles.fab, { backgroundColor: '#f06292' }]}
         icon="plus"
         onPress={() => navigation.navigate('Courses', { screen: 'AddCourse' })}
       />

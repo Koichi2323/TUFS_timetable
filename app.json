@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "tufs-timetable",
+    "slug": "tufs-timetable",
+    "version": "1.0.0",
+    "main": "node_modules/expo/AppEntry.js",
+    "orientation": "portrait",
+    "icon": "./assets/app-icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/app-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "bundler": "webpack",
+      "favicon": "./assets/app-icon.png"
+    }
+  }
+}

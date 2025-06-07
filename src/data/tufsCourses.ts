@@ -169,6 +169,150 @@ export const tufsCourses: Course[] = [
     semester: '春学期',
     language: 'その他',
     color: '#ffddff'
+  },
+  // 2025年度 月曜1限の授業データ（JSONファイルから追加）
+  {
+    id: '19112501',
+    name: '専攻言語（英語Ⅰ-1）',
+    professor: '須田　祐子　[SUDA Yuko]',
+    title: 'Regional Language A/English I',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '１０４',
+    semester: '春学期',
+    language: '英語 一部日本語を含む',
+    color: '#ffcccc',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19112501'
+  },
+  {
+    id: '19121519',
+    name: '専攻言語（中国語Ⅲ-5）',
+    professor: '史　東陽　[SHI Dongyang]',
+    title: '地域言語A（中国語Ⅲ-5）文章表現',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '１０３',
+    semester: '春学期',
+    language: 'その他',
+    color: '#ccffcc',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19121519'
+  },
+  {
+    id: '19132528',
+    name: '専攻言語（ﾋﾝﾃﾞｨｰ語Ⅲ-3）',
+    professor: 'ミッシュル　リシケーシュ　[MISHRA Rishikesh]',
+    title: 'ヒンディー語 III-3 (総合C)',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '３３０',
+    semester: '春学期',
+    language: 'その他',
+    color: '#ccccff',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19132528'
+  },
+  {
+    id: '19133301',
+    name: '日本語総合-1',
+    professor: '相場　いぶき, 廣居　美樹, 水信　渉, 良永　朋実　[AIBA Ibuki, HIROI Miki, MIZUSHINA Wataru, YOSHINAGA Tomomi]',
+    title: '初級1総合日本語101',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日３０７',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ffccff',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133301'
+  },
+  {
+    id: '19133303',
+    name: '日本語総合-2',
+    professor: '良永　朋実, 沖本　与子, 早矢仕　香, 相場　いぶき　[YOSHINAGA Tomomi, OKIMOTO Tomoko, HAYASHI Kaori, AIBA Ibuki]',
+    title: '初級2　総合日本語201a',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日３０８',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ffffcc',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133303'
+  },
+  {
+    id: '19133305',
+    name: '日本語総合-3',
+    professor: '韓　金柱, 大木　理恵, 城戸　寿美子, 中島　久朱　[KAN KIN CHU, OOKI　Rie, KIDO Sumiko, NAKAJIMA Kusu]',
+    title: '中級1総合日本語301a',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日２１３',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ccffff',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133305'
+  },
+  {
+    id: '19133307',
+    name: '日本語総合-4',
+    professor: '嶋原　耕一, 前田　真紀, 熊田　道子, 韓　金柱, 石田　恵里子　[SHIMAHARA Koichi, MAEDA Maki, KUMADA Michiko, KAN KIN CHU, ISHIDA Eriko]',
+    title: '中級2総合日本語401a',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日２１４',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ffdddd',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133307'
+  },
+  {
+    id: '19133309',
+    name: '日本語総合-5',
+    professor: '伊達　宏子, 中島　久朱, 福島　佐知, 前田　真紀, 水信　渉　[DATE Hiroko, NAKAJIMA Kusu, FUKUSHIMA Sachi, MAEDA Maki, MIZUSHINA Wataru]',
+    title: '中上級総合日本語501a',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日２１５',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ddffdd',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133309'
+  },
+  {
+    id: '19133311',
+    name: '日本語総合-6',
+    professor: '赤桐　敦, 早矢仕　香, 石澤　徹　[AKAGIRI Atsushi, HAYASHI Kaori, ISHIZAWA Toru]',
+    title: '上級1総合日本語601a',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日２１６',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ffffdd',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133311'
+  },
+  {
+    id: '19133330',
+    name: '日本語技能-聴解7',
+    professor: '早矢仕　香　[HAYASHI Kaori]',
+    title: '上級2聴解713',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '留日２１７',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ddddff',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19133330'
+  },
+  {
+    id: '19160068',
+    name: '中東地域基礎2',
+    professor: '青山　弘之　[AOYAMA Hiroyuki]',
+    title: '中東／西アジア・北アフリカ地域基礎（アラブ地域）',
+    dayOfWeek: 1, // 月曜日
+    period: 1,    // 1限
+    room: '１０２',
+    semester: '春学期',
+    language: '日本語',
+    color: '#ffddff',
+    syllabusUrl: 'https://gakumu-web1.tufs.ac.jp/Portal/Public/Syllabus/DetailMain.aspx?lct_year=2025&lct_cd=19160068'
   }
 ];
 

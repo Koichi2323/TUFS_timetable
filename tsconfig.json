@@ -1,4 +1,36 @@
 {
-  "compilerOptions": {},
+  "compilerOptions": {
+    "jsx": "react-native",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmitOnError": false,
+    "noEmit": false,
+    "outDir": "./dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "App.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "firebase.js",
+    "importData.js",
+    "importDataBatch.js",
+    "process-syllabus-data.js",
+    "scripts/**/*.js",
+    "src/data/coursesByDay/**/*.js",
+    "src/data/tuesdayCourses.js",
+    "src/utils/importCourses.js",
+    "src/utils/importLocalData.js",
+    "src/utils/loadNewSyllabusData.js",
+    "src/utils/localDataManager.js",
+    "tufs-timetable-web/**/*.js",
+    "web-build/**/*.js"
+  ],
   "extends": "expo/tsconfig.base"
 }
