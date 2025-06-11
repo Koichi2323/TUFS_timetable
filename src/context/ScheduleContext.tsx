@@ -109,6 +109,7 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
       return newCourses;
     });
 
+    /*
     if (!auth.currentUser) {
       console.error("[ScheduleContext] User not authenticated. Cannot add course to Firestore.");
       // Rollback local change if needed, though isCourseAdded should prevent this path if already added
@@ -129,18 +130,23 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
       setUserCourses((prevCourses) => prevCourses.filter(c => c.id !== course.id));
       return { success: false };
     }
+    */
+    // ローカルでの追加は成功したとみなす
+    console.log('[ScheduleContext] Course added locally (Firebase sync skipped):', course.id);
+    return { success: true };
   };
 
   // 授業を削除
   const removeCourse = async (courseId: string): Promise<void> => {
     console.log('[ScheduleContext] Attempting to remove course:', courseId);
-    const courseToRemove = userCourses.find(c => c.id === courseId);
+    // const courseToRemove = userCourses.find(c => c.id === courseId); // Not needed if not rolling back
     setUserCourses((prevCourses) => {
       const updatedCourses = prevCourses.filter((course) => course.id !== courseId);
       console.log('[ScheduleContext] Local userCourses updated:', updatedCourses);
       return updatedCourses;
     });
 
+    /*
     if (!auth.currentUser) {
       console.error("[ScheduleContext] User not authenticated. Cannot remove course from Firestore.");
       // Rollback local change
@@ -177,6 +183,7 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
         setUserCourses((prevCourses) => [...prevCourses, courseToRemove]);
       }
     }
+    */
   };
 
   // 授業が追加されているかチェック

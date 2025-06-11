@@ -57,3 +57,6 @@ tufs-timetable-web/
 
 # Old or unused root App.js (if App.tsx is primary)
 App.js
+
+# Local Netlify folder
+.netlify

@@ -283,7 +283,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     </Modal>
   );
 
-  const handleAddToSchedule = (course: Course) => {
+  const handleAddToSchedule = async (course: Course) => {
     // 既に同じIDの授業が追加されているかチェック
     if (isCourseAdded(course.id)) {
       setSnackbarMessage('この授業はすでに時間割に追加されています');
@@ -309,10 +309,14 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
           },
           { 
             text: '追加する', 
-            onPress: () => {
+            onPress: async () => {
               // 確認後に追加
-              addCourse(course);
-              setSnackbarMessage(`${course.name}を時間割に追加しました`);
+              const result = await addCourse(course);
+              if (result.success) {
+                setSnackbarMessage(`${course.name}を時間割に追加しました`);
+              } else {
+                setSnackbarMessage(`${course.name}の追加に失敗しました。ログイン状態などを確認してください。${result.conflictCourse ? ' 時間重複の可能性があります。' : ''}`);
+              }
               setSnackbarVisible(true);
             } 
           }
@@ -320,8 +324,12 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       );
     } else {
       // 重複がない場合はそのまま追加
-      addCourse(course);
-      setSnackbarMessage(`${course.name}を時間割に追加しました`);
+      const result = await addCourse(course);
+      if (result.success) {
+        setSnackbarMessage(`${course.name}を時間割に追加しました`);
+      } else {
+        setSnackbarMessage(`${course.name}の追加に失敗しました。ログイン状態などを確認してください。${result.conflictCourse ? ' 時間重複の可能性があります。' : ''}`);
+      }
       setSnackbarVisible(true);
     }
   };

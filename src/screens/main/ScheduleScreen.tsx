@@ -217,13 +217,18 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
               {selectedCourse.room && <Text style={styles.modalText}>教室: {selectedCourse.room}</Text>}
               {selectedCourse.instructor && <Text style={styles.modalText}>担当教員: {selectedCourse.instructor}</Text>}
               
-              {selectedCourse.syllabusUrl && (
+              {selectedCourse && selectedCourse.syllabusUrl && ( // syllabusUrl が存在する場合のみ表示
                 <Button 
                   mode="contained" 
-                  onPress={() => Linking.openURL(selectedCourse.syllabusUrl!)} 
+                  onPress={() => {
+                    if (selectedCourse && selectedCourse.syllabusUrl) {
+                      Linking.openURL(selectedCourse.syllabusUrl);
+                    }
+                    setModalVisible(false); // モーダルは閉じる
+                  }} 
                   style={styles.syllabusButton}
                   labelStyle={styles.buttonLabel}
-                  icon="open-in-new"
+                  icon="open-in-new" // 外部リンクを開くので "open-in-new" が適切
                 >
                   シラバスを見る
                 </Button>
