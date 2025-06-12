@@ -9,6 +9,7 @@ export interface ScheduleContextType {
   userCourses: Course[];
   addCourse: (course: Course) => Promise<{ success: boolean; conflictCourse?: Course }>;
   removeCourse: (courseId: string) => Promise<void>;
+  updateCourse: (courseId: string, updatedData: Partial<Course>) => Promise<void>;
   isCourseAdded: (courseId: string) => boolean;
   getConflictCourse: (dayOfWeek: number, period: number) => Course | undefined;
   hasTimeConflict: (dayOfWeek: number, period: number) => boolean;
@@ -18,7 +19,8 @@ export interface ScheduleContextType {
 const defaultScheduleContext: ScheduleContextType = {
   userCourses: [],
   addCourse: async () => ({ success: false }),
-  removeCourse: async () => {},
+  removeCourse: async () => { console.warn('removeCourse function not yet implemented in placeholder'); }, 
+  updateCourse: async () => { console.warn('updateCourse function not yet implemented in placeholder'); Promise.resolve(); },
   isCourseAdded: () => false,
   getConflictCourse: () => undefined,
   hasTimeConflict: () => false,
@@ -136,6 +138,23 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
     return { success: true };
   };
 
+  // 授業を更新
+  const updateCourse = async (courseId: string, updatedData: Partial<Course>) => {
+    try {
+      setUserCourses(prevCourses => {
+        const newCourses = prevCourses.map(course => 
+          course.id === courseId ? { ...course, ...updatedData } : course
+        );
+        AsyncStorage.setItem('userCourses', JSON.stringify(newCourses));
+        return newCourses;
+      });
+    } catch (error) {
+      console.error('Failed to update course in context:', error);
+      // エラーハンドリング (例: Snackbar表示など)
+      throw error; //呼び出し元でエラーをキャッチできるように再スロー
+    }
+  };
+
   // 授業を削除
   const removeCourse = async (courseId: string): Promise<void> => {
     const updatedCourses = userCourses.filter(course => course.id !== courseId);
@@ -192,6 +211,7 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
         userCourses,
         addCourse,
         removeCourse,
+        updateCourse,
         isCourseAdded,
         getConflictCourse,
         hasTimeConflict,

@@ -29,6 +29,7 @@
       }
     },
     "web": {
+
       "bundler": "webpack",
       "favicon": "./assets/app-icon.png"
     }

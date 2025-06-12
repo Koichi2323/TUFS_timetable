@@ -13,6 +13,7 @@ export interface Course {
   syllabusUrl?: string; // シラバスURL
   credits?: number;     // 単位数 (任意、手入力想定)
   color?: string;       // 表示色 (任意、ユーザー設定)
+  memo?: string;        // メモ (任意、ユーザー入力)
 }
 
 // ユーザーが登録した授業

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Linking } from 'react-native';
 import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native'; // Alert を削除
-import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal, Portal, Dialog, Paragraph } from 'react-native-paper'; // Portal, Dialog, Paragraph を追加
+import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal, Portal, Dialog, Paragraph, TextInput } from 'react-native-paper'; // Portal, Dialog, Paragraph を追加
 import { Ionicons } from '@expo/vector-icons';
 import { useSchedule } from '../../context/ScheduleContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,20 +21,51 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [courseIdToDelete, setCourseIdToDelete] = useState<string | null>(null);
+
+  // States for editing course details in modal
+  const [editingCourseName, setEditingCourseName] = useState('');
+  const [editingRoomName, setEditingRoomName] = useState('');
+  const [editingMemo, setEditingMemo] = useState('');
+  const [editingColor, setEditingColor] = useState<string | undefined>(undefined);
   
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
   const insets = useSafeAreaInsets();
   
   // スケジュールコンテキストを使用
-  const { userCourses, removeCourse } = useSchedule();
+  const { userCourses, addCourse, removeCourse, updateCourse, isCourseAdded, getConflictCourse, hasTimeConflict } = useSchedule();
 
   // Days of the week in Japanese
   const days = ['月', '火', '水', '木', '金'];
   
+  // Predefined colors for courses (from ColorPicker.tsx)
+  const predefinedCourseColors = [
+    '#6200ee', // Purple (Primary)
+    '#3f51b5', // Indigo
+    '#2196f3', // Blue
+    '#03a9f4', // Light Blue
+    '#00bcd4', // Cyan
+    '#009688', // Teal
+    '#4caf50', // Green
+    '#8bc34a', // Light Green
+    '#cddc39', // Lime
+    '#ffeb3b', // Yellow
+    '#ffc107', // Amber
+    '#ff9800', // Orange
+    '#ff5722', // Deep Orange
+    '#f44336', // Red
+    '#e91e63', // Pink
+    '#9c27b0', // Purple
+  ];
+
   // 6限の授業が登録されているか確認
   const hasSixthPeriod = useMemo(() => 
     userCourses.some((c) => c.period === 6),
+    [userCourses]
+  );
+  // 7限の授業が登録されているか確認
+  const hasSeventhPeriod = useMemo(() => 
+    userCourses.some((c) => c.period === 7),
     [userCourses]
   );
 
@@ -87,7 +118,50 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const handleCellPress = (course: Course | undefined) => {
     if (course) {
       setSelectedCourse(course);
+      // Initialize editing states
+      setEditingCourseName(course.name || '');
+      setEditingRoomName(course.room || '');
+      setEditingMemo(course.memo || '');
+      setEditingColor(course.color);
       setModalVisible(true);
+    }
+  };
+
+  const handleSaveChanges = async () => {
+    if (!selectedCourse) return;
+
+    const updatedCourseData: Partial<Course> = {
+      // id: selectedCourse.id, // IDはキーとして使い、データとしては含めないことが多い
+      name: editingCourseName,
+      room: editingRoomName,
+      memo: editingMemo,
+      color: editingColor,
+      // 元のデータを保持しつつ、変更点だけをマージする場合は以下のようにする
+      // ...selectedCourse, // スプレッド構文で元のデータを展開
+      // name: editingCourseName,
+      // room: editingRoomName,
+      // memo: editingMemo,
+      // color: editingColor,
+      // day: selectedCourse.day, // 曜日や時限は変更しない想定なら元のまま
+      // period: selectedCourse.period,
+      // title: selectedCourse.title, // 他の不変な情報も同様
+      // instructor: selectedCourse.instructor,
+      // syllabusUrl: selectedCourse.syllabusUrl,
+    };
+
+    try {
+      await updateCourse(selectedCourse.id, updatedCourseData); // ScheduleContextの関数を呼び出し
+      console.log('Successfully saved changes for course ID:', selectedCourse.id, 'Data:', updatedCourseData);
+      // ここで実際に ScheduleContext の updateCourse を呼び出す
+      // 例: await updateCourse(selectedCourse.id, updatedCourseData);
+      // その後、モーダルを閉じる
+      setModalVisible(false);
+      setSnackbarMessage('授業情報が更新されました。'); // Snackbarでフィードバック
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error("Failed to update course:", error);
+      setSnackbarMessage('授業情報の更新に失敗しました。');
+      setSnackbarVisible(true);
     }
   };
 
@@ -236,7 +310,63 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
               {selectedCourse.title && <Text style={styles.modalText}>講義題目: {selectedCourse.title}</Text>}
               {selectedCourse.room && <Text style={styles.modalText}>教室: {selectedCourse.room}</Text>}
               {selectedCourse.instructor && <Text style={styles.modalText}>担当教員: {selectedCourse.instructor}</Text>}
+
+              {/* Editable Fields */}
+              <TextInput
+                label="授業名"
+                value={editingCourseName}
+                onChangeText={setEditingCourseName}
+                mode="outlined"
+                style={styles.textInput}
+              />
+              <TextInput
+                label="教室名"
+                value={editingRoomName}
+                onChangeText={setEditingRoomName}
+                mode="outlined"
+                style={styles.textInput}
+              />
+              <TextInput
+                label="メモ"
+                value={editingMemo}
+                onChangeText={setEditingMemo}
+                mode="outlined"
+                multiline
+                numberOfLines={3}
+                style={styles.textInput}
+              />
+
+              {/* Color Picker */}
+              <View style={styles.colorPickerContainer}>
+                <Text style={styles.colorPickerLabel}>授業の色:</Text>
+                <View style={styles.colorsRow}>
+                  {predefinedCourseColors.map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorOption,
+                        { backgroundColor: color },
+                        editingColor === color && styles.selectedColorOption,
+                      ]}
+                      onPress={() => setEditingColor(color)}
+                    >
+                      {editingColor === color && (
+                        <Ionicons name="checkmark" size={16} color="white" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
               
+              {/* Save Changes Button */}
+              <Button
+                mode="contained"
+                onPress={handleSaveChanges}
+                style={styles.saveButton}
+              >
+                変更を保存
+              </Button>
+
               {selectedCourse && selectedCourse.syllabusUrl && ( // syllabusUrl が存在する場合のみ表示
                 <Button 
                   mode="contained" 
@@ -470,7 +600,42 @@ const styles = StyleSheet.create({
   },
   buttonLabel: {
     fontSize: 14, // Ensure button text is readable
-  }
+  },
+  textInput: {
+    marginBottom: 10,
+  },
+  colorPickerContainer: {
+    marginTop: 10,
+    marginBottom: 15,
+  },
+  colorPickerLabel: {
+    fontSize: 16,
+    marginBottom: 8,
+    // color: theme.colors.onSurface, // テーマに合わせて
+  },
+  colorsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+  },
+  colorOption: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    margin: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  selectedColorOption: {
+    borderWidth: 2,
+    borderColor: '#000000', // テーマに合わせて変更可
+  },
+  saveButton: {
+    marginTop: 15,
+    marginBottom: 10,
+  },
 });
 
 export default ScheduleScreen;
