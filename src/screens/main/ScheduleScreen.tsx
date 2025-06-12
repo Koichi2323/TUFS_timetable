@@ -92,8 +92,9 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   };
 
   const renderTimeTable = () => {
-    const contentWidth = screenWidth - insets.left - insets.right;
-    const columnWidth = contentWidth * 0.20;
+    const scrollViewHorizontalPadding = 16; // scrollViewContentのpadding: 8 (左) + 8 (右) = 16
+    const availableWidthForColumns = screenWidth - insets.left - insets.right - scrollViewHorizontalPadding;
+    const columnWidth = availableWidthForColumns / 5;
     return (
       <View style={styles.tableContainer}>
           {/* Header row with days */}
@@ -313,7 +314,6 @@ const styles = StyleSheet.create({
   },
   tableContainer: {
     flex: 1,
-    paddingRight: 8, // 金曜日の右側に追加の余白
   },
   headerRow: {
     flexDirection: 'row',
@@ -384,6 +384,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08, // Softer shadow
     shadowRadius: 1.5,
     overflow: 'hidden',
+    marginHorizontal: 2, // 隣接する授業セル間の左右マージン
   },
   roomContainer: {
     paddingVertical: 2, // Slightly increased for readability
