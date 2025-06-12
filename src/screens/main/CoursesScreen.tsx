@@ -385,6 +385,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                       onChangeText={handleSearch}
                       value={searchQuery}
                       style={styles.searchBar}
+                      icon="magnify" // Explicitly set the icon
                       ref={searchbarInputRef as any}
                     />
                   </View>

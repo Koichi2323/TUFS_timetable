@@ -30,6 +30,7 @@ export type Course = {
   absentClasses?: number;
   lateClasses?: number;
   academicYear?: string; // 開講年度 (例: "2024年度")
+  memo?: string; // ユーザーが追加するメモ
 };
 
 // You can add other shared types here, for example:
