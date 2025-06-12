@@ -313,6 +313,7 @@ const styles = StyleSheet.create({
   },
   tableContainer: {
     flex: 1,
+    paddingRight: 8, // 金曜日の右側に追加の余白
   },
   headerRow: {
     flexDirection: 'row',
