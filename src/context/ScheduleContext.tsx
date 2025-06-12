@@ -138,19 +138,13 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
 
   // 授業を削除
   const removeCourse = async (courseId: string): Promise<void> => {
-    console.log('[ScheduleContext] Attempting to remove course:', courseId);
-    // const courseToRemove = userCourses.find(c => c.id === courseId); // Not needed if not rolling back
-    setUserCourses((prevCourses) => {
-      const updatedCourses = prevCourses.filter((course) => course.id !== courseId);
-      console.log('[ScheduleContext] Local userCourses updated:', updatedCourses);
-      return updatedCourses;
-    });
-
+    const updatedCourses = userCourses.filter(course => course.id !== courseId);
+    setUserCourses(updatedCourses);
+    await AsyncStorage.setItem('userCourses', JSON.stringify(updatedCourses));
     /*
+    // Firestore interaction temporarily disabled
     if (!auth.currentUser) {
       console.error("[ScheduleContext] User not authenticated. Cannot remove course from Firestore.");
-      // Rollback local change
-      if (courseToRemove) setUserCourses((prevCourses) => [...prevCourses, courseToRemove]);
       return;
     }
     console.log('[ScheduleContext] Current user ID:', auth.currentUser.uid);
@@ -161,10 +155,6 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
       console.log('[ScheduleContext] Firestore query created for courseId:', courseId, 'and userId:', auth.currentUser.uid);
       
       const querySnapshot = await getDocs(q);
-      console.log('[ScheduleContext] Firestore query snapshot size:', querySnapshot.size);
-      querySnapshot.forEach((doc) => {
-        console.log('[ScheduleContext] Document to be deleted:', doc.id, doc.data());
-      });
 
       if (querySnapshot.empty) {
         console.warn('[ScheduleContext] No matching document found in Firestore to delete for courseId:', courseId);
@@ -178,9 +168,10 @@ export const ScheduleProvider: React.FC<ScheduleProviderProps> = ({ children }) 
       console.log('[ScheduleContext] Course removed from Firestore (batch committed):', courseId);
     } catch (error) {
       console.error('[ScheduleContext] Failed to remove course from Firestore', error);
-      if (courseToRemove) {
-        console.log('[ScheduleContext] Rolling back local state for course:', courseToRemove.id);
-        setUserCourses((prevCourses) => [...prevCourses, courseToRemove]);
+      // Attempt to find the removed course in the original userCourses list for rollback
+      const courseToRollback = userCourses.find(course => course.id === courseId); 
+      if (courseToRollback) {
+         setUserCourses((prevCourses) => [...prevCourses, courseToRollback]);
       }
     }
     */

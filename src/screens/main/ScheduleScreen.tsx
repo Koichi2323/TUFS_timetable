@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Linking } from 'react-native';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal } from 'react-native-paper';
+import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native'; // Alert を削除
+import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal, Portal, Dialog, Paragraph } from 'react-native-paper'; // Portal, Dialog, Paragraph を追加
 import { Ionicons } from '@expo/vector-icons';
-import { Course } from '../../types';
 import { useSchedule } from '../../context/ScheduleContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Course } from '../../types';
 
 type ScheduleScreenProps = {
   navigation: any;
@@ -18,25 +19,30 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const [loading, setLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [courseIdToDelete, setCourseIdToDelete] = useState<string | null>(null);
   
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
+  const insets = useSafeAreaInsets();
   
   // スケジュールコンテキストを使用
   const { userCourses, removeCourse } = useSchedule();
 
   // Days of the week in Japanese
   const days = ['月', '火', '水', '木', '金'];
-  // Number of periods (時限)
-  const periods = [1, 2, 3, 4, 5];
-  // 時間帯の表示
-  const periodTimes: { [key: number]: string } = {
-    1: '08:30',
-    2: '10:10',
-    3: '12:40',
-    4: '14:20',
-    5: '16:00'
-  };
+  
+  // 6限の授業が登録されているか確認
+  const hasSixthPeriod = useMemo(() => 
+    userCourses.some((c) => c.period === 6),
+    [userCourses]
+  );
+
+  // 6限の有無に応じて表示する時限数を動的に変更
+  const periods = hasSixthPeriod ? [1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+  const periodTimes: { [key: number]: string } = hasSixthPeriod 
+    ? { 1: '08:30', 2: '10:15', 3: '12:45', 4: '14:30', 5: '16:15', 6: '17:30' } 
+    : { 1: '08:30', 2: '10:15', 3: '12:45', 4: '14:30', 5: '16:15' };
 
   useEffect(() => {
     // ユーザーの授業が読み込まれたらローディングを終了
@@ -52,27 +58,30 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
     return foundCourse;
   };
   
-  // 授業を削除する
+  // 授業削除ダイアログ表示の準備
   const handleRemoveCourse = (courseId: string) => {
-    Alert.alert(
-      '授業を削除',
-      'この授業を時間割から削除しますか？',
-      [
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-        },
-        {
-          text: '削除',
-          onPress: () => {
-            removeCourse(courseId);
-            setSnackbarMessage('授業を時間割から削除しました');
-            setSnackbarVisible(true);
-          },
-          style: 'destructive',
-        },
-      ]
-    );
+    console.log('[ScheduleScreen] handleRemoveCourse function CALLED with courseId:', courseId);
+    setCourseIdToDelete(courseId);
+    setDeleteDialogVisible(true);
+  };
+
+  // 実際に授業を削除する処理 (ダイアログの「削除」ボタンから呼び出される)
+  const confirmRemoveCourse = async () => {
+    if (!courseIdToDelete) return;
+    console.log('[ScheduleScreen] confirmRemoveCourse called for courseId:', courseIdToDelete);
+    try {
+      await removeCourse(courseIdToDelete); // Context の removeCourse を呼び出す
+      setSnackbarMessage('授業を時間割から削除しました');
+      setSnackbarVisible(true);
+    } catch (error) {
+      console.error('[ScheduleScreen] Failed to remove course via Dialog:', error);
+      setSnackbarMessage('授業の削除に失敗しました。');
+      setSnackbarVisible(true);
+    }
+    setModalVisible(false); // 詳細モーダルを閉じる
+    setSelectedCourse(null);  // 選択中の授業をクリア
+    setDeleteDialogVisible(false); // 削除確認ダイアログを閉じる
+    setCourseIdToDelete(null);     // 削除対象IDをクリア
   };
 
   const handleCellPress = (course: Course | undefined) => {
@@ -83,111 +92,121 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   };
 
   const renderTimeTable = () => {
-    const columnWidth = screenWidth * 0.20;
+    const contentWidth = screenWidth - insets.left - insets.right;
+    const columnWidth = contentWidth * 0.20;
     return (
       <View style={styles.tableContainer}>
-        {/* Header row with days */}
-        <View style={styles.headerRow}>
-          {days.map((day, index) => (
-            <View 
-              key={`day-header-${index}`} 
-              style={[styles.dayCell, { width: columnWidth }]}
-            >
-              <Text style={styles.dayText}>{day}</Text>
-            </View>
-          ))}
-        </View>
-        
-        {/* Period rows with start times */}
-        {periods.map((period) => (
-          <React.Fragment key={`period-fragment-${period}`}>
-            {/* Start Time Row */}
-            <View style={styles.startTimeRow}>
-              {days.map((_, dayIndex) => (
-                <View key={`time-slot-${period}-${dayIndex}`} style={[styles.startTimeSlot, { width: columnWidth }]}>
-                  {dayIndex === 2 && ( // Wednesday is at index 2
-                    <Text style={styles.startTimeText}>{periodTimes[period]}</Text>
-                  )}
-                </View>
-              ))}
-            </View>
-
-            {/* Course Cells Row */}
-            <View key={`period-cells-${period}`} style={styles.periodRow}>
-              {days.map((dayString, dayIndex) => {
-                const course = getCourseByDayAndPeriod(dayIndex, period);
-                return (
-                  <TouchableOpacity 
-                    key={`cell-${dayIndex}-${period}`}
-                    style={[styles.courseCellTouchable, { width: columnWidth }]}
-                    onPress={() => {
-                      if (course) handleCellPress(course);
-                    }}
-                    activeOpacity={course ? 0.7 : 1}
-                  >
-                    {course ? (
-                      <View style={styles.courseCellCard}>
-                        {course.room && (
-                          <View style={[styles.roomContainer, { backgroundColor: course.color || '#A0A0A0' }]}>
-                            <Text style={styles.roomText} numberOfLines={1}>{course.room}</Text>
-                          </View>
-                        )}
-                        <View style={styles.courseNameContainer}>
-                          <Text style={styles.courseNameText} numberOfLines={3}>
-                            {course.name}
-                          </Text>
-                        </View>
-                      </View>
-                    ) : (
-                      <View style={styles.emptyCourseCellCard} /> // Empty cell placeholder
+          {/* Header row with days */}
+          <View style={styles.headerRow}>
+            {days.map((day, index) => (
+              <View 
+                key={`day-header-${index}`} 
+                style={[styles.dayCell, { width: columnWidth }]}
+              >
+                <Text style={styles.dayText}>{day}</Text>
+              </View>
+            ))}
+          </View>
+          
+          {/* Period rows with start times */}
+          {periods.map((period, periodIndex) => (
+            <React.Fragment key={`period-fragment-${period}`}>
+              {/* Start Time Row */}
+              <View style={styles.startTimeRow}>
+                {days.map((_, dayIndex) => (
+                  <View key={`time-slot-${period}-${dayIndex}`} style={[styles.startTimeSlot, { width: columnWidth }]}>
+                    {dayIndex === 2 && ( // Wednesday is at index 2
+                      <Text style={styles.startTimeText}>{periodTimes[period]}</Text>
                     )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </React.Fragment>
-        ))}
+                  </View>
+                ))}
+              </View>
+
+              {/* Course Cells Row */}
+              <View key={periodIndex} style={styles.periodContainer}>
+                <View style={styles.periodRow}>
+                  {days.map((dayString, dayIndex) => {
+                    const course = getCourseByDayAndPeriod(dayIndex, period);
+                    return (
+                      <TouchableOpacity 
+                        key={`cell-${dayIndex}-${period}`}
+                        style={[styles.courseCellTouchable, { width: columnWidth }]}
+                        onPress={() => {
+                          if (course) handleCellPress(course);
+                        }}
+                        activeOpacity={course ? 0.7 : 1}
+                      >
+                        {course ? (
+                          <View style={styles.courseCellCard}>
+                            {course.room && (
+                              <View style={[styles.roomContainer, { backgroundColor: course.color || '#A0A0A0' }]}>
+                                <Text style={styles.roomText} numberOfLines={1}>{course.room}</Text>
+                              </View>
+                            )}
+                            <View style={styles.courseNameContainer}>
+                              <Text style={styles.courseNameText} numberOfLines={3}>
+                                {course.name}
+                              </Text>
+                            </View>
+                          </View>
+                        ) : (
+                          <View style={styles.emptyCourseCellCard} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </React.Fragment>
+          ))}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollViewContent}
-        showsVerticalScrollIndicator={true}
-      >
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#f06292" />
-            <Text style={{ marginTop: 16 }}>
-              時間割を読み込み中...
-            </Text>
-          </View>
-        ) : (
-          <>
-            {renderTimeTable()} 
-            {userCourses.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  時間割に授業が登録されていません
-                </Text>
-                <Text style={styles.emptySubText}>
-                  「履修科目検索」から授業を追加してください
-                </Text>
-              </View>
-            )}
-          </>
-        )}
-      </ScrollView>
-      
-      <FAB
-        style={styles.fab}
-        icon="magnify"
-        color="#fff"
-        onPress={() => navigation.navigate('Courses')}
-      />
-      
+    <SafeAreaView style={[styles.container, styles.safeArea, { backgroundColor: theme.colors.background, paddingTop: insets.top }]}>
+      <View style={styles.scrollViewContent}>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#f06292" />
+          <Text style={{ marginTop: 16 }}>
+            時間割を読み込み中...
+          </Text>
+        </View>
+      ) : (
+        <>
+          {renderTimeTable()} 
+          {userCourses.length === 0 && (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                時間割に授業が登録されていません
+              </Text>
+              <Text style={styles.emptySubText}>
+                「履修科目検索」から授業を追加してください
+              </Text>
+            </View>
+          )}
+        </>
+      )}
+      </View>
+      <Portal>
+        <Dialog 
+          visible={deleteDialogVisible} 
+          onDismiss={() => setDeleteDialogVisible(false)}
+        >
+          <Dialog.Title>授業を削除</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>この授業を時間割から削除しますか？</Paragraph>
+            {/* オプションで削除対象の授業名などを表示しても良い */}
+            {/* selectedCourse && courseIdToDelete === selectedCourse.id && <Paragraph>授業名: {selectedCourse.name}</Paragraph> */}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDeleteDialogVisible(false)}>キャンセル</Button>
+            <Button onPress={confirmRemoveCourse} color={theme.colors.error}>削除</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -202,7 +221,7 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
         <Modal
           visible={modalVisible}
           onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={styles.modalContent}
+          contentContainerStyle={styles.modalContent} // Lintエラーを修正
         >
           <Card>
             <Card.Title 
@@ -250,25 +269,50 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
           </Card>
         </Modal>
       )}
-    </View>
+      
+      <Dialog 
+        visible={deleteDialogVisible} 
+        onDismiss={() => setDeleteDialogVisible(false)}
+        style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          backgroundColor: 'rgba(255, 0, 0, 0.7)', // 半透明の赤
+          zIndex: 9999, // 最前面
+          justifyContent: 'center', // 内容を中央に
+          alignItems: 'center'      // 内容を中央に
+        }}
+      >
+        <Dialog.Content style={{ backgroundColor: 'white', padding: 20, borderRadius: 8 }}>
+          <Paragraph>この授業を時間割から削除しますか？</Paragraph>
+          <Button mode="contained" onPress={confirmRemoveCourse}>削除</Button>
+          <Button mode="text" onPress={() => setDeleteDialogVisible(false)}>キャンセル</Button>
+        </Dialog.Content>
+      </Dialog>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF', // White background for the entire screen
   },
   scrollViewContent: {
-    flexGrow: 1, // Allow vertical expansion
+    flex: 1, // Allow vertical expansion
     padding: 8, // Overall padding for the schedule content
-    paddingBottom: 80, // Increased padding for FAB and bottom spacing
+    paddingBottom: 16, // Reduced padding for bottom spacing
   },
   tableCard: { // This style will likely be unused after Card component is removed from JSX
     // Keeping it empty or minimal as Card will be removed
   },
   tableContainer: {
-    // padding: 0, // Padding is now handled by scrollViewContent
+    flex: 1,
   },
   headerRow: {
     flexDirection: 'row',
@@ -279,21 +323,25 @@ const styles = StyleSheet.create({
   dayCell: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8, // Reduced padding for day headers
     // flex: 1, // width is set dynamically
   },
   dayText: {
     fontSize: 12,
     color: '#B0B0B0', // Slightly adjusted color for day headers
   },
+  periodContainer: {
+    flex: 1,
+  },
   periodRow: {
+    flex: 1,
     flexDirection: 'row',
     // borderBottomWidth removed, gaps will provide separation
   },
   timeCell: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8, // Keep vertical padding for row height consistency
+    marginVertical: 0, // コマ間の縦マージンをなくす
     paddingHorizontal: 4, // Reduce horizontal padding
     // borderRightWidth: 1, // Removed vertical border
     // borderRightColor: '#e0e0e0',
@@ -305,10 +353,10 @@ const styles = StyleSheet.create({
   },
   startTimeRow: {
     flexDirection: 'row',
-    paddingVertical: 6, // Space above/below start times
+    paddingVertical: 2, // Reduced space above/below start times
   },
   startTimeSlot: {
-    height: 24, // Adjusted height for start time slot
+    height: 18, // Reduced height for start time slot
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -322,8 +370,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   courseCellTouchable: {
-    height: 100, // Standard height for the touchable area
-    padding: 4, // This padding creates the visual gap around courseCellCard
+    padding: 0, // Remove padding to minimize gap between cells
     // width is set dynamically in renderTimeTable
   },
   courseCellCard: {
@@ -338,13 +385,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   roomContainer: {
-    paddingVertical: 5,
+    paddingVertical: 2, // Slightly increased for readability
     paddingHorizontal: 8,
     alignItems: 'center',
   },
   courseNameContainer: {
     paddingHorizontal: 6,
-    paddingVertical: 4,
+    paddingVertical: 2, // Slightly increased for readability
     flex: 1, 
     justifyContent: 'flex-start', // Align course name to the top after room
     alignItems: 'center',
@@ -352,14 +399,14 @@ const styles = StyleSheet.create({
   roomText: {
     color: '#FFFFFF',
     fontWeight: 'bold',
-    fontSize: 12,
+    fontSize: 11, // フォントサイズを縮小
     textAlign: 'center',
   },
   courseNameText: {
-    fontSize: 10,
+    fontSize: 10, // フォントサイズを縮小
     color: '#333333',
     textAlign: 'center',
-    lineHeight: 14, // Adjust line height for better readability in small cells
+    lineHeight: 13, // Slightly increased for readability
   },
   loadingContainer: {
     flex: 1,

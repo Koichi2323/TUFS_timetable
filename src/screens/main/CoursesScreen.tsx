@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Linking, TextInput as RNTextInput } from 'react-native';
+import { SafeAreaView, View, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Linking, TextInput as RNTextInput } from 'react-native';
 import { Text, Card, Searchbar, Chip, Button, useTheme, ActivityIndicator, Menu, Divider, TextInput, Modal, Portal, Snackbar } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Course } from '../../types';
 import { useSchedule } from '../../context/ScheduleContext';
 import { useSyllabus } from '../../contexts/SyllabusContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // ローカルデータ管理を使用 (コメントアウト)
 // import { getCoursesFromLocalStorage, searchCoursesLocally, filterCoursesLocally, saveCoursesToLocalStorage } from '../../utils/localDataManager';
@@ -45,10 +46,11 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const searchbarInputRef = useRef<RNTextInput | null>(null);
   
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Filter options
   const dayOptions = ['すべて', '月曜', '火曜', '水曜', '木曜', '金曜'];
-  const periodOptions = ['すべて', '1限', '2限', '3限', '4限', '5限'];
+  const periodOptions = ['すべて', '1限', '2限', '3限', '4限', '5限', '6限'];
   const semesterOptions = ['すべて', '春学期', '秋学期', '通年']; // Options for "開講学期"
   const languageOptions = ['すべて', '日本語', '英語', 'その他'];
   const academicYearOptions = ['すべて', '2025年度']; // New: Academic Year Options - Filtered to 2025 only
@@ -335,7 +337,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top }]}>
       <Portal>
         {renderFilterModal(dayModalVisible, setDayModalVisible, dayOptions, dayFilter, setDayFilter, '曜日を選択')}
         {renderFilterModal(periodModalVisible, setPeriodModalVisible, periodOptions, periodFilter, setPeriodFilter, '時限を選択')}
@@ -501,7 +503,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       >
         {snackbarMessage}
       </Snackbar>
-    </View> // Closing the main View from line 324
+    </SafeAreaView> // Closing the main SafeAreaView
   );
 };
 

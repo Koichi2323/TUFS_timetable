@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch as RNSwitch, Linking } from 'react-native';
+import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch as RNSwitch, Linking } from 'react-native';
 import { Text, Card, Button, useTheme, List, Divider, Dialog, Portal, TextInput } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -7,6 +7,7 @@ import { auth, db } from '../../../firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import Constants from 'expo-constants';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SettingsScreenProps = {
   navigation: any;
@@ -28,6 +29,7 @@ const SettingsScreen = ({ navigation, toggleTheme, isDarkMode }: SettingsScreenP
   const [passwordVisible, setPasswordVisible] = useState(false);
   
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   
   useEffect(() => {
     fetchUserData();
@@ -201,7 +203,7 @@ const SettingsScreen = ({ navigation, toggleTheme, isDarkMode }: SettingsScreenP
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.colors.primary }]}>設定</Text>
         <TouchableOpacity onPress={toggleTheme}>
@@ -430,7 +432,7 @@ const SettingsScreen = ({ navigation, toggleTheme, isDarkMode }: SettingsScreenP
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </View>
+    </SafeAreaView>
   );
 };
 

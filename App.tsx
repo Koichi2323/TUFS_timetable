@@ -19,6 +19,7 @@ const CustomDefaultTheme = {
   colors: {
     ...PaperDefaultTheme.colors,
     ...NavigationDefaultTheme.colors,
+    backdrop: 'transparent', // ダイアログの背景オーバーレイを透明に
     // primary: '#yourPrimaryColor', // 必要に応じて上書き
   },
 };
@@ -29,6 +30,7 @@ const CustomDarkTheme = {
   colors: {
     ...PaperDarkTheme.colors,
     ...NavigationDarkTheme.colors,
+    backdrop: 'transparent', // ダイアログの背景オーバーレイを透明に
     // primary: '#yourDarkPrimaryColor', // 必要に応じて上書き
   },
 };
