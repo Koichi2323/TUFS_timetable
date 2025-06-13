@@ -121,13 +121,13 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     if (query.trim() === '') {
       results = [...courses]; // coursesはSyllabusContext由来の全データ
     } else {
-      const queryLower = query.toLowerCase(); // Optimize: convert query to lower once
+      const normalizedQuery = query.toLowerCase().normalize('NFKC');
       results = courses.filter(course => {
-        const matchesName = course.name.toLowerCase().includes(queryLower);
-        const matchesProfessor = course.professor && course.professor.toLowerCase().includes(queryLower);
-        const matchesTitle = course.title && course.title.toLowerCase().includes(queryLower);
-        const matchesLanguage = course.language && course.language.toLowerCase().includes(queryLower); // Add language to search
-        const matchesNotes = course.notes && course.notes.toLowerCase().includes(queryLower); // Add notes to search
+        const matchesName = course.name.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesProfessor = course.professor && course.professor.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesTitle = course.title && course.title.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesLanguage = course.language && course.language.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesNotes = course.notes && course.notes.toLowerCase().normalize('NFKC').includes(normalizedQuery);
         return matchesName || matchesProfessor || matchesTitle || matchesLanguage || matchesNotes;
       });
     }
