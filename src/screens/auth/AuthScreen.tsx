@@ -1,7 +1,7 @@
 // src/screens/auth/AuthScreen.tsx
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { TextInput, Button, Text, useTheme, ActivityIndicator } from 'react-native-paper';
+import { TextInput, Button, Text, useTheme, ActivityIndicator, HelperText } from 'react-native-paper';
 import { auth } from '../../../firebase'; // Firebase設定をインポート
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
@@ -112,6 +112,9 @@ const AuthScreen = () => {
           />
         }
       />
+      <HelperText type="info" visible={true} style={styles.helperText}>
+        このパスワードはこのアプリ専用のものです。Googleアカウント等の既存のパスワードとは異なります。
+      </HelperText>
 
       {loading ? (
         <ActivityIndicator animating={true} color={theme.colors.primary} size="large" style={styles.loader} />
@@ -174,6 +177,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     // color: theme.colors.onSurfaceVariant, // This will be applied inline in JSX to access theme
     paddingHorizontal: 10,
+  },
+  helperText: {
+    marginBottom: 10, // Adjust as needed, to give some space before the buttons
   }
 });
 

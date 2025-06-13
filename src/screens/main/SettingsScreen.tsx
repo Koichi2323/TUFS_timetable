@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Alert, Linking, Platform } from 'react-native';
 import { Text, Card, Button, useTheme, List, Divider, Dialog, Portal, TextInput } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +20,26 @@ const SettingsScreen = ({ navigation, toggleTheme, isDarkMode }: SettingsScreenP
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
+    console.log('[SettingsScreen] useEffect for onAuthStateChanged mounting/running.');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('[SettingsScreen] onAuthStateChanged triggered. User:', user ? user.email : null);
       setCurrentUser(user);
     });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    return () => {
+      console.log('[SettingsScreen] Unsubscribing from onAuthStateChanged.');
+      unsubscribe(); // Cleanup subscription on unmount
+    };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[SettingsScreen] Focus effect: Screen came into focus. Current auth user:', auth.currentUser ? auth.currentUser.email : null);
+      setCurrentUser(auth.currentUser);
+      return () => {
+        console.log('[SettingsScreen] Focus effect: Screen lost focus.');
+      };
+    }, [])
+  );
 
   const handleSignOut = async () => {
   console.log('[SettingsScreen] handleSignOut called');
@@ -33,11 +49,7 @@ const SettingsScreen = ({ navigation, toggleTheme, isDarkMode }: SettingsScreenP
         console.log('[SettingsScreen] Attempting to sign out from Firebase...');
         await auth.signOut();
         console.log('[SettingsScreen] Firebase signOut successful.');
-        // Reset the SettingsStack to show AuthScreen
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'AuthScreen' }], 
-        });
+        // currentUser state will be updated by onAuthStateChanged, causing re-render
       } catch (error) { // error is 'unknown' type
         console.error('Error signing out:', error);
         // Safely access error message
