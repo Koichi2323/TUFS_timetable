@@ -6,10 +6,11 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Helmet, HelmetProvider } from 'react-helmet-async'; // Import Helmet
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Correct import
 import MainNavigator from './src/navigation/MainNavigator';
-import AuthNavigator from './src/navigation/AuthNavigator';
+import AuthNavigator from './src/navigation/AuthNavigator'; // 認証関連のナビゲーター
 import { ScheduleProvider } from './src/context/ScheduleContext';
 import { SyllabusProvider } from './src/contexts/SyllabusContext';
 import { auth } from './firebase'; // Make sure this path is correct
+import { User, onAuthStateChanged } from 'firebase/auth';
 
 // カスタムテーマを定義 (オプション)
 const CustomDefaultTheme = {
@@ -36,6 +37,8 @@ const CustomDarkTheme = {
 
 export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(false); // ダークモードの状態
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   const toggleTheme = useCallback(() => { // テーマを切り替える関数
     setIsDarkMode(prevMode => !prevMode);
@@ -43,37 +46,31 @@ export default function App() {
 
   const theme = isDarkMode ? CustomDarkTheme : CustomDefaultTheme; // 現在のテーマ
 
-  /* Temporarily disable auth logic
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        console.log('User is signed in:', user.uid);
-        setCurrentUser(user);
-        setIsAuthLoading(false);
-      } else {
-        console.log('User is not signed in, attempting anonymous sign-in...');
-        signInAnonymously(auth)
-          .then((userCredential) => {
-            console.log('Signed in anonymously:', userCredential.user.uid);
-            // onAuthStateChanged will set currentUser and isAuthLoading
-          })
-          .catch((error) => {
-            console.error('Error signing in anonymously:', error);
-            setIsAuthLoading(false); 
-          });
-      }
+      setCurrentUser(user);
+      setIsAuthLoading(false);
     });
-    return () => unsubscribe();
+    return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
-  
+
   if (isAuthLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
-        <ActivityIndicator animating={true} size="large" color={theme.colors.primary} />
-      </View>
+      <PaperProvider theme={theme}>
+        <SafeAreaProvider>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background }}>
+            <ActivityIndicator animating={true} size="large" color={theme.colors.primary} />
+          </View>
+        </SafeAreaProvider>
+      </PaperProvider>
     );
   }
-  */
+
+  // Always render MainNavigator initially. AuthNavigator is reached from SettingsScreen.
+  // The currentUser state is still used by ScheduleContext and SettingsScreen.
+  const NavigatorToRender = (
+    <MainNavigator toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
+  );
 
   return (
     <HelmetProvider> {/* Wrap the entire app with HelmetProvider */}
@@ -99,8 +96,7 @@ export default function App() {
           <ScheduleProvider>
             <SyllabusProvider>
               <NavigationContainer theme={theme}> {/* NavigationContainerにテーマを適用 */}
-                {/* Always render MainNavigator for now */}
-                <MainNavigator toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
+                {NavigatorToRender}
               </NavigationContainer>
             </SyllabusProvider>
           </ScheduleProvider>

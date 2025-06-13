@@ -1,35 +1,21 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// Import screens
-import LoginScreen from '../screens/auth/LoginScreen';
-import RegisterScreen from '../screens/auth/RegisterScreen';
-import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import AuthScreen from '../screens/auth/AuthScreen'; // 作成したAuthScreenをインポート
 
 const Stack = createNativeStackNavigator();
 
-type AuthNavigatorProps = {
-  toggleTheme: () => void;
-  isDarkMode: boolean;
-};
-
-const AuthNavigator = ({ toggleTheme, isDarkMode }: AuthNavigatorProps) => {
+const AuthNavigator = () => {
   return (
     <Stack.Navigator
-      initialRouteName="Login"
+      initialRouteName="AuthScreen" // 初期ルートをAuthScreenに
       screenOptions={{
-        headerShown: false,
+        headerShown: false, // ヘッダーは非表示のまま
       }}
     >
-      <Stack.Screen name="Login" options={{ title: 'ログイン' }}>
-        {(props) => <LoginScreen {...props} toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}
-      </Stack.Screen>
-      <Stack.Screen name="Register" options={{ title: '新規登録' }}>
-        {(props) => <RegisterScreen {...props} toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}
-      </Stack.Screen>
-      <Stack.Screen name="ForgotPassword" options={{ title: 'パスワード再設定' }}>
-        {(props) => <ForgotPasswordScreen {...props} toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}
-      </Stack.Screen>
+      <Stack.Screen name="AuthScreen" component={AuthScreen} />
+      {/* 必要であれば、将来的にパスワードリセット画面などをここに追加できます */}
+      {/* <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} /> */}
     </Stack.Navigator>
   );
 };

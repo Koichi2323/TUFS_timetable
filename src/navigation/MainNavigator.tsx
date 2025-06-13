@@ -11,6 +11,7 @@ import CourseDetailScreen from '../screens/main/CourseDetailScreen';
 import AddCourseScreen from '../screens/main/AddCourseScreen';
 import EditCourseScreen from '../screens/main/EditCourseScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import AuthScreen from '../screens/auth/AuthScreen'; // Import AuthScreen
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -50,6 +51,9 @@ const SettingsStack = ({ toggleTheme, isDarkMode }: { toggleTheme: () => void; i
       {(props) => <SettingsScreen {...props} toggleTheme={toggleTheme} isDarkMode={isDarkMode} />}
     </Stack.Screen>
     {/* Add other screens for Settings stack if needed, e.g., PastSchedulesScreen */}
+    <Stack.Screen name="AuthScreen" options={{ title: 'アカウント認証', headerStyle: { backgroundColor: '#f06292' }, headerTintColor: '#fff' }}>
+      {() => <AuthScreen />}
+    </Stack.Screen>
   </Stack.Navigator>
 );
 

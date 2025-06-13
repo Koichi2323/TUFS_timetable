@@ -347,167 +347,164 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       </Portal>
       
       <View style={styles.header}>
-        <Text style={styles.title}>東京外国語大学</Text>
+        <Text style={styles.title}>履修検索</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton}>
             <Ionicons name="notifications-outline" size={30} color="#fff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate('ProfileStackScreen')}> 
-            <Ionicons name="person-outline" size={30} color="#fff" />
-          </TouchableOpacity>
-        </View>
+
       </View>
-      
-      {loading && courses.length === 0 ? (
-        <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-          <ActivityIndicator animating={true} size="large" />
-          <Text style={{ marginTop: 10 }}>授業データを読み込んでいます...</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredCourses}
-          renderItem={renderCourseCard}
-          keyExtractor={(item) => item.id.toString()} 
-          ListHeaderComponent={
-            <>
-              {/* searchContainerで全体を囲む (元々の構造) */}
-              <View style={styles.searchContainer}>
-                {/* Searchbar (TouchableOpacityでラップ済み) */}
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => {
-                    searchbarInputRef.current?.focus();
-                  }}
-                >
-                  <View pointerEvents="none">
-                    <Searchbar
-                      placeholder="科目名、教員名などで検索"
-                      onChangeText={handleSearch}
-                      value={searchQuery}
-                      style={styles.searchBar}
-                      icon="magnify" // Explicitly set the icon
-                      ref={searchbarInputRef as any}
+    </View>
+    
+    {loading && courses.length === 0 ? (
+      <View style={[styles.container, styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator animating={true} size="large" />
+        <Text style={{ marginTop: 10 }}>授業データを読み込んでいます...</Text>
+      </View>
+    ) : (
+      <FlatList
+        data={filteredCourses}
+        renderItem={renderCourseCard}
+        keyExtractor={(item) => item.id.toString()} 
+        ListHeaderComponent={
+          <>
+            {/* searchContainerで全体を囲む (元々の構造) */}
+            <View style={styles.searchContainer}>
+              {/* Searchbar (TouchableOpacityでラップ済み) */}
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => {
+                  searchbarInputRef.current?.focus();
+                }}
+              >
+                <View pointerEvents="none">
+                  <Searchbar
+                    placeholder="科目名、教員名などで検索"
+                    onChangeText={handleSearch}
+                    value={searchQuery}
+                    style={styles.searchBar}
+                    icon="magnify" // Explicitly set the icon
+                    ref={searchbarInputRef as any}
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {/* フィルターセクション */}
+              <View style={styles.filterRow}>
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>曜日</Text>
+                  <TouchableOpacity
+                    style={styles.selectContainer}
+                    onPress={() => setDayModalVisible(true)}
+                  >
+                    <TextInput
+                      value={dayFilter}
+                      style={styles.select}
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
                     />
-                  </View>
-                </TouchableOpacity>
-
-                {/* フィルターセクション */}
-                <View style={styles.filterRow}>
-                  <View style={styles.filterColumn}>
-                    <Text style={styles.filterLabel}>曜日</Text>
-                    <TouchableOpacity
-                      style={styles.selectContainer}
-                      onPress={() => setDayModalVisible(true)}
-                    >
-                      <TextInput
-                        value={dayFilter}
-                        style={styles.select}
-                        right={<TextInput.Icon icon="chevron-down" />}
-                        editable={false}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  
-                  <View style={styles.filterColumn}>
-                    <Text style={styles.filterLabel}>時間帯</Text>
-                    <TouchableOpacity
-                      style={styles.selectContainer}
-                      onPress={() => setPeriodModalVisible(true)}
-                    >
-                      <TextInput
-                        value={periodFilter}
-                        style={styles.select}
-                        right={<TextInput.Icon icon="chevron-down" />}
-                        editable={false}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={styles.filterRow}>
-                  <View style={styles.filterColumn}>
-                    <Text style={styles.filterLabel}>開講学期</Text>
-                    <TouchableOpacity
-                      style={styles.selectContainer}
-                      onPress={() => setSemesterModalVisible(true)}
-                    >
-                      <TextInput
-                        value={semesterFilter}
-                        style={styles.select}
-                        right={<TextInput.Icon icon="chevron-down" />}
-                        editable={false}
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.filterColumn}>
-                    <Text style={styles.filterLabel}>使用言語</Text>
-                    <TouchableOpacity
-                      style={styles.selectContainer}
-                      onPress={() => setLanguageModalVisible(true)}
-                    >
-                      <TextInput
-                        value={languageFilter}
-                        style={styles.select}
-                        right={<TextInput.Icon icon="chevron-down" />}
-                        editable={false}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* 開講年度フィルター (元々ListHeaderComponentの外にあったものを中に移動) */}
-                <View style={styles.filterRow}>
-                  <View style={styles.filterColumn}>
-                    <Text style={styles.filterLabel}>開講年度</Text>
-                    <TouchableOpacity
-                      style={styles.selectContainer}
-                      onPress={() => setAcademicYearModalVisible(true)}
-                    >
-                      <TextInput
-                        value={academicYearFilter}
-                        style={styles.select}
-                        right={<TextInput.Icon icon="chevron-down" />}
-                        editable={false}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  {/* 右側のカラムが空なら、バランスのために空のViewを置くか、filterColumnのスタイルを調整 */}
-                  <View style={styles.filterColumn} /> 
+                  </TouchableOpacity>
                 </View>
                 
-                <Button 
-                  mode="contained" 
-                  style={styles.searchButton}
-                  onPress={() => handleSearch(searchQuery)} // Temporarily revert to handleSearch
-                >
-                  検索
-                </Button>
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>時間帯</Text>
+                  <TouchableOpacity
+                    style={styles.selectContainer}
+                    onPress={() => setPeriodModalVisible(true)}
+                  >
+                    <TextInput
+                      value={periodFilter}
+                      style={styles.select}
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </>
-          }
-          ListFooterComponent={<View style={{ height: 100 }} />}
-          contentContainerStyle={styles.listContentContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>該当する授業はありません。</Text>
-            </View>
-          }
-        />
-      )}
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={Snackbar.DURATION_SHORT}
-        style={styles.snackbar}
-      >
-        {snackbarMessage}
-      </Snackbar>
-    </SafeAreaView> // Closing the main SafeAreaView
+              <View style={styles.filterRow}>
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>開講学期</Text>
+                  <TouchableOpacity
+                    style={styles.selectContainer}
+                    onPress={() => setSemesterModalVisible(true)}
+                  >
+                    <TextInput
+                      value={semesterFilter}
+                      style={styles.select}
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>使用言語</Text>
+                  <TouchableOpacity
+                    style={styles.selectContainer}
+                    onPress={() => setLanguageModalVisible(true)}
+                  >
+                    <TextInput
+                      value={languageFilter}
+                      style={styles.select}
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* 開講年度フィルター (元々ListHeaderComponentの外にあったものを中に移動) */}
+              <View style={styles.filterRow}>
+                <View style={styles.filterColumn}>
+                  <Text style={styles.filterLabel}>開講年度</Text>
+                  <TouchableOpacity
+                    style={styles.selectContainer}
+                    onPress={() => setAcademicYearModalVisible(true)}
+                  >
+                    <TextInput
+                      value={academicYearFilter}
+                      style={styles.select}
+                      right={<TextInput.Icon icon="chevron-down" />}
+                      editable={false}
+                    />
+                  </TouchableOpacity>
+                </View>
+                {/* 右側のカラムが空なら、バランスのために空のViewを置くか、filterColumnのスタイルを調整 */}
+                <View style={styles.filterColumn} /> 
+              </View>
+              
+              <Button 
+                mode="contained" 
+                style={styles.searchButton}
+                onPress={() => handleSearch(searchQuery)} // Temporarily revert to handleSearch
+              >
+                検索
+              </Button>
+            </View>
+          </>
+        }
+        ListFooterComponent={<View style={{ height: 100 }} />}
+        contentContainerStyle={styles.listContentContainer}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>該当する授業はありません。</Text>
+          </View>
+        }
+      />
+    )}
+
+    <Snackbar
+      visible={snackbarVisible}
+      onDismiss={() => setSnackbarVisible(false)}
+      duration={Snackbar.DURATION_SHORT}
+      style={styles.snackbar}
+    >
+      {snackbarMessage}
+    </Snackbar>
+  </SafeAreaView> // Closing the main SafeAreaView
   );
 };
-
 
 
 const styles = StyleSheet.create({
@@ -556,7 +553,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 20,
@@ -578,16 +576,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   searchContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 10,
+    backgroundColor: '#fff', 
     borderRadius: 8,
-    margin: 16,
+    marginHorizontal: 10,
+    marginBottom: 8,
     marginTop: 0,
     elevation: 2,
     zIndex: 1, // Ensure sticky header is above list but below modals
   },
   searchBar: {
-    marginBottom: 16,
+    marginBottom: 8,
     backgroundColor: '#f5f5f5',
     borderWidth: 1,
     borderColor: '#e0e0e0',
@@ -595,7 +594,7 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   filterColumn: {
     flex: 1,
@@ -616,10 +615,10 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: '#e75480', 
-    marginTop: 10,
+    marginTop: 6,
     width: '50%',
     alignSelf: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   emptyMessage: {
     fontSize: 16,

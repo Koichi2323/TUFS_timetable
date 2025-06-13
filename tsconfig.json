@@ -18,7 +18,6 @@
   "exclude": [
     "node_modules",
     "babel.config.js",
-    "firebase.js",
     "importData.js",
     "importDataBatch.js",
     "process-syllabus-data.js",
