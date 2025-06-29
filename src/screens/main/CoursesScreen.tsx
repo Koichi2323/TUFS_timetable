@@ -390,30 +390,22 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 <View style={styles.filterColumn}>
                   <Text style={styles.filterLabel}>曜日</Text>
                   <TouchableOpacity
-                    style={styles.selectContainer}
+                    style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
                     onPress={() => setDayModalVisible(true)}
                   >
-                    <TextInput
-                      value={dayFilter}
-                      style={styles.select}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
-                    />
+                    <Text style={{ fontSize: 16 }}>{dayFilter}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
                   </TouchableOpacity>
                 </View>
                 
                 <View style={styles.filterColumn}>
                   <Text style={styles.filterLabel}>時間帯</Text>
                   <TouchableOpacity
-                    style={styles.selectContainer}
+                    style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
                     onPress={() => setPeriodModalVisible(true)}
                   >
-                    <TextInput
-                      value={periodFilter}
-                      style={styles.select}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
-                    />
+                    <Text style={{ fontSize: 16 }}>{periodFilter}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -422,15 +414,11 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 <View style={styles.filterColumn}>
                   <Text style={styles.filterLabel}>開講学期</Text>
                   <TouchableOpacity
-                    style={styles.selectContainer}
+                    style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
                     onPress={() => setSemesterModalVisible(true)}
                   >
-                    <TextInput
-                      value={semesterFilter}
-                      style={styles.select}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
-                    />
+                    <Text style={{ fontSize: 16 }}>{semesterFilter}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
                   </TouchableOpacity>
                 </View>
 
@@ -454,15 +442,11 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 <View style={styles.filterColumn}>
                   <Text style={styles.filterLabel}>開講年度</Text>
                   <TouchableOpacity
-                    style={styles.selectContainer}
+                    style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
                     onPress={() => setAcademicYearModalVisible(true)}
                   >
-                    <TextInput
-                      value={academicYearFilter}
-                      style={styles.select}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
-                    />
+                    <Text style={{ fontSize: 16 }}>{academicYearFilter}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
                   </TouchableOpacity>
                 </View>
                 {/* 右側のカラムが空なら、バランスのために空のViewを置くか、filterColumnのスタイルを調整 */}
