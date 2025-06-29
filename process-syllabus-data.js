@@ -32,18 +32,22 @@ function extractFacultyAndCategory(deptDirName, jsonFileName) {
   else if (deptDirNameLower.startsWith('03_') || deptDirNameLower.includes('国際社会')) faculty = '国際社会学部';
   else if (deptDirNameLower.startsWith('04_') || deptDirNameLower.includes('国際日本')) faculty = '国際日本学部';
   else if (deptDirNameLower.includes('大学院')) faculty = '大学院';
-  // Add more mappings if needed
+  else if (deptDirNameLower.startsWith('07_') || deptDirNameLower.includes('オンデマンド')) {
+    faculty = 'その他';
+    refinedCategory = 'オンデマンド・時間外';
+  }
 
-  // Category extraction from file name (example: "概論", "専門")
-  const fileNameLower = jsonFileName.toLowerCase();
-  if (fileNameLower.includes('導入')) refinedCategory = '導入';
-  else if (fileNameLower.includes('概論')) refinedCategory = '概論';
-  else if (fileNameLower.includes('専門')) refinedCategory = '専門';
-  else if (fileNameLower.includes('専攻言語')) refinedCategory = '専攻言語';
-  else if (fileNameLower.includes('教養外国語')) refinedCategory = '教養外国語';
+  // Category extraction from file name, only if not already set
+  if (!refinedCategory) {
+    const fileNameLower = jsonFileName.toLowerCase();
+    if (fileNameLower.includes('導入')) refinedCategory = '導入';
+    else if (fileNameLower.includes('概論')) refinedCategory = '概論';
+    else if (fileNameLower.includes('専門')) refinedCategory = '専門';
+    else if (fileNameLower.includes('専攻言語')) refinedCategory = '専攻言語';
+    else if (fileNameLower.includes('教養外国語')) refinedCategory = '教養外国語';
+  }
   
   // If no specific category found in filename, use a general one or leave empty
-  // For "世界教養学部", if no other category, it's often a general category.
   if ((faculty === '世界教養学部' || faculty === '国際日本学部') && !refinedCategory) refinedCategory = '全'; // Default for these faculties
   if (faculty === '大学院' && !refinedCategory) refinedCategory = '大学院'; // Default for graduate school
 
@@ -103,6 +107,8 @@ async function processSyllabusFiles() {
 
                 // Pass the filtered academicYearFor2025, extracted faculty, refinedCategory, and semester
                 const course = convertJSONToCourse(item, academicYearFor2025, faculty, refinedCategory, semester);
+
+
                 if (course && course.id && course.id.trim() !== '') {
                   allCourses.push(course);
                 } else {
