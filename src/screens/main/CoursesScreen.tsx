@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, View, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Linking, TextInput as RNTextInput } from 'react-native';
-import { Text, Card, Searchbar, Chip, Button, useTheme, ActivityIndicator, Menu, Divider, TextInput, Modal, Portal, Snackbar, Checkbox } from 'react-native-paper';
+import { Text, Card, Searchbar, Chip, Button, useTheme, ActivityIndicator, Menu, Divider, TextInput, Modal, Portal, Snackbar, RadioButton } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Course } from '../../types';
 import { useSchedule } from '../../context/ScheduleContext';
@@ -439,7 +439,11 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                     onPress={() => setOnDemandOnly(!onDemandOnly)}
                     style={[styles.selectContainer, { height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, backgroundColor: '#fff' }]}
                   >
-                    <Checkbox status={onDemandOnly ? 'checked' : 'unchecked'} />
+                    <RadioButton
+                      value="onDemand"
+                      status={onDemandOnly ? 'checked' : 'unchecked'}
+                      onPress={() => setOnDemandOnly(!onDemandOnly)}
+                    />
                     <Text style={{ marginLeft: 8 }}>オンデマンド</Text>
                   </TouchableOpacity>
                 </View>
