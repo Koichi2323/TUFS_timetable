@@ -418,7 +418,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 </View>
               </View>
 
-              <View style={styles.filterRow}>
+              <View style={[styles.filterRow, { alignItems: 'flex-end' }]}>
                 <View style={styles.filterColumn}>
                   <Text style={styles.filterLabel}>開講学期</Text>
                   <TouchableOpacity
@@ -434,19 +434,14 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                   </TouchableOpacity>
                 </View>
 
-                <View style={styles.filterColumn}>
-                  <Text style={styles.filterLabel}>オンデマンド</Text>
-                  <View style={[styles.filterColumn, { alignItems: 'center', justifyContent: 'center', paddingTop: 20 }]}>
-                    <Checkbox.Item
-                      label="オンデマンド"
-                      status={onDemandOnly ? 'checked' : 'unchecked'}
-                      onPress={() => {
-                        setOnDemandOnly(!onDemandOnly);
-                      }}
-                      position="leading"
-                      style={{ paddingVertical: 0, paddingHorizontal: 0 }}
-                    />
-                  </View>
+                <View style={[styles.filterColumn, { marginRight: 0, marginBottom: 0 }]}>
+                  <TouchableOpacity
+                    onPress={() => setOnDemandOnly(!onDemandOnly)}
+                    style={[styles.selectContainer, { height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, backgroundColor: '#fff' }]}
+                  >
+                    <Checkbox status={onDemandOnly ? 'checked' : 'unchecked'} />
+                    <Text style={{ marginLeft: 8 }}>オンデマンド</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
 
