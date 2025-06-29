@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SafeAreaView, View, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Linking, TextInput as RNTextInput } from 'react-native';
-import { Text, Card, Searchbar, Chip, Button, useTheme, ActivityIndicator, Menu, Divider, TextInput, Modal, Portal, Snackbar } from 'react-native-paper';
+import { Text, Card, Searchbar, Chip, Button, useTheme, ActivityIndicator, Menu, Divider, TextInput, Modal, Portal, Snackbar, Checkbox } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Course } from '../../types';
 import { useSchedule } from '../../context/ScheduleContext';
@@ -26,14 +26,13 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const [dayFilter, setDayFilter] = useState('すべて');
   const [periodFilter, setPeriodFilter] = useState('すべて');
   const [semesterFilter, setSemesterFilter] = useState('すべて'); // This will be "開講学期"
-  const [languageFilter, setLanguageFilter] = useState('すべて');
   const [academicYearFilter, setAcademicYearFilter] = useState('すべて'); // New: Academic Year
+  const [onDemandOnly, setOnDemandOnly] = useState(false); // New: On-demand filter
   
   // フィルターモーダル用の状態
   const [dayModalVisible, setDayModalVisible] = useState(false);
   const [periodModalVisible, setPeriodModalVisible] = useState(false);
   const [semesterModalVisible, setSemesterModalVisible] = useState(false);
-  const [languageModalVisible, setLanguageModalVisible] = useState(false);
   const [academicYearModalVisible, setAcademicYearModalVisible] = useState(false); // New: Academic Year Modal
   
   // スナックバー用の状態
@@ -52,7 +51,6 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const dayOptions = ['すべて', '月曜', '火曜', '水曜', '木曜', '金曜'];
   const periodOptions = ['すべて', '1限', '2限', '3限', '4限', '5限', '6限'];
   const semesterOptions = ['すべて', '春学期', '秋学期', '通年']; // Options for "開講学期"
-  const languageOptions = ['すべて', '日本語', '英語', 'その他'];
   const academicYearOptions = ['すべて', '2025年度']; // New: Academic Year Options - Filtered to 2025 only
   
   // 曜日と曜日インデックスのマッピング
@@ -155,9 +153,9 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       results = results.filter(course => course.semester === semesterFilter);
     }
     
-    // 言語フィルタリング
-    if (languageFilter !== 'すべて') {
-      results = results.filter(course => course.language === languageFilter);
+    // オンデマンドフィルタリング
+    if (onDemandOnly) {
+      results = results.filter(course => course.onDemand);
     }
     
     // Temporarily comment out academicYear filter to avoid lint errors
@@ -193,7 +191,6 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
             {item.room && <Text style={styles.cardText}>教室: {item.room}</Text>}
             {item.class_name && <Text style={styles.cardText}>クラス: {item.class_name}</Text>}
             {item.semester && <Text style={styles.cardText}>学期: {item.semester}</Text>}
-            {item.language && <Text style={styles.cardText}>言語: {item.language}</Text>}
             {item.academicYear && <Text style={styles.cardText}>学年度: {item.academicYear}</Text>}
             
             <View style={styles.buttonContainer}>
@@ -342,7 +339,6 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
         {renderFilterModal(dayModalVisible, setDayModalVisible, dayOptions, dayFilter, setDayFilter, '曜日を選択')}
         {renderFilterModal(periodModalVisible, setPeriodModalVisible, periodOptions, periodFilter, setPeriodFilter, '時限を選択')}
         {renderFilterModal(semesterModalVisible, setSemesterModalVisible, semesterOptions, semesterFilter, setSemesterFilter, '開講学期を選択')}
-        {renderFilterModal(languageModalVisible, setLanguageModalVisible, languageOptions, languageFilter, setLanguageFilter, '言語を選択')}
         {renderFilterModal(academicYearModalVisible, setAcademicYearModalVisible, academicYearOptions, academicYearFilter, setAcademicYearFilter, '開講年度を選択')} {/* New: Academic Year Modal */}
       </Portal>
       
@@ -439,18 +435,18 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 </View>
 
                 <View style={styles.filterColumn}>
-                  <Text style={styles.filterLabel}>使用言語</Text>
-                  <TouchableOpacity
-                    style={styles.selectContainer}
-                    onPress={() => setLanguageModalVisible(true)}
-                  >
-                    <TextInput
-                      value={languageFilter}
-                      style={styles.select}
-                      right={<TextInput.Icon icon="chevron-down" />}
-                      editable={false}
+                  <Text style={styles.filterLabel}>オンデマンド</Text>
+                  <View style={[styles.filterColumn, { alignItems: 'center', justifyContent: 'center', paddingTop: 20 }]}>
+                    <Checkbox.Item
+                      label="オンデマンド"
+                      status={onDemandOnly ? 'checked' : 'unchecked'}
+                      onPress={() => {
+                        setOnDemandOnly(!onDemandOnly);
+                      }}
+                      position="leading"
+                      style={{ paddingVertical: 0, paddingHorizontal: 0 }}
                     />
-                  </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
