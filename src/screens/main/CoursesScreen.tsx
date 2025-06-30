@@ -113,9 +113,22 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   };
 
   const handleSearch = () => {
+    const isAnyFilterActive = 
+      searchQuery.trim() !== '' ||
+      dayFilter !== 'すべて' ||
+      periodFilter !== 'すべて' ||
+      semesterFilter !== 'すべて' ||
+      academicYearFilter !== 'すべて' ||
+      onDemandOnly;
+
+    if (!isAnyFilterActive) {
+      setFilteredCourses([]);
+      return;
+    }
+
     if (!courses) {
-        setFilteredCourses([]);
-        return;
+      setFilteredCourses([]);
+      return;
     }
 
     let results = courses;
@@ -150,9 +163,14 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     }
     
     // オンデマンド授業フィルタリング
-    // onDemandOnlyがtrueならオンデマンドのみ、falseならオンデマンド以外
-    results = results.filter(course => (course.onDemand || false) === onDemandOnly);
-    
+    if (onDemandOnly) {
+      // onDemandOnlyがtrueなら、onDemand: true の授業のみ表示
+      results = results.filter(course => course.onDemand === true);
+    } else {
+      // onDemandOnlyがfalseなら、onDemandがtrueでない授業（falseまたは未定義）を表示
+      results = results.filter(course => (course.onDemand || false) === false);
+    }
+
     setFilteredCourses(results);
   };
 

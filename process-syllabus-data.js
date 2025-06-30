@@ -57,6 +57,7 @@ function extractFacultyAndCategory(deptDirName, jsonFileName) {
 
 async function processSyllabusFiles() {
   let allCourses = [];
+  const processedIds = new Set(); // Set to store IDs of processed courses
   console.log(`Starting syllabus data processing from: ${syllabusDataBaseDir}`);
 
   try {
@@ -110,7 +111,13 @@ async function processSyllabusFiles() {
 
 
                 if (course && course.id && course.id.trim() !== '') {
-                  allCourses.push(course);
+                  if (!processedIds.has(course.id)) { // Check if ID already processed
+                    allCourses.push(course);
+                    processedIds.add(course.id); // Add the new ID to the set
+                  } else {
+                    // Log the skipped duplicate for debugging purposes
+                    console.warn(`Skipping duplicate course ID: ${course.id} from file: ${filePath}`);
+                  }
                 } else {
                   console.warn(`Skipping item due to missing or empty id. Original item: ${JSON.stringify(item)}`);
                 }
