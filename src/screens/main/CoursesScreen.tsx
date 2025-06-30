@@ -53,18 +53,26 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const semesterOptions = ['すべて', '春学期', '秋学期', '通年']; // Options for "開講学期"
   const academicYearOptions = ['すべて', '2025年度']; // New: Academic Year Options - Filtered to 2025 only
   
-  // 曜日と曜日インデックスのマッピング
+  // 曜日と曜日インデックスのマッピング (データ形式に合わせ、月曜:1, 火曜:2, ...とする)
   const dayNameToIndex = {
-    '月曜': 0,
-    '火曜': 1,
-    '水曜': 2,
-    '木曜': 3,
-    '金曜': 4
+    '月曜': 1,
+    '火曜': 2,
+    '水曜': 3,
+    '木曜': 4,
+    '金曜': 5
   };
 
   useEffect(() => {
     loadCourses();
   }, [syllabusCourses]);
+
+  // 検索クエリ、フィルター、またはコースリストが変更されたときに検索を実行
+  useEffect(() => {
+    // coursesがまだロードされていない場合は検索を実行しない
+    if (courses.length > 0) {
+      handleSearch();
+    }
+  }, [searchQuery, dayFilter, periodFilter, semesterFilter, academicYearFilter, onDemandOnly, courses]);
 
   const loadCourses = async () => {
     try {
@@ -104,64 +112,46 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     }
   };
 
-  const handleSearch = async (query: string) => {
-    console.log('handleSearch called with query:', query); //
-    setSearchQuery(query);
-    // setLoading(true); // setLoadingはloadCoursesやuseEffectに任せるか、適切に管理
-    
-    // syllabusCoursesが確定している前提でフィルタリングのみ行う
-    if (!courses || courses.length === 0) {
+  const handleSearch = () => {
+    if (!courses) {
         setFilteredCourses([]);
         return;
     }
 
-    let results: Course[] = [];
-    if (query.trim() === '') {
-      results = [...courses]; // coursesはSyllabusContext由来の全データ
-    } else {
-      const normalizedQuery = query.toLowerCase().normalize('NFKC');
-      results = courses.filter(course => {
+    let results = courses;
+
+    // 検索クエリによるフィルタリング
+    if (searchQuery.trim() !== '') {
+      const normalizedQuery = searchQuery.toLowerCase().normalize('NFKC');
+      results = results.filter(course => {
         const matchesName = course.name.toLowerCase().normalize('NFKC').includes(normalizedQuery);
-        const matchesProfessor = course.professor && course.professor.toLowerCase().normalize('NFKC').includes(normalizedQuery);
-        const matchesTitle = course.title && course.title.toLowerCase().normalize('NFKC').includes(normalizedQuery);
-        const matchesLanguage = course.language && course.language.toLowerCase().normalize('NFKC').includes(normalizedQuery);
-        const matchesNotes = course.notes && course.notes.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesProfessor = course.professor?.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesTitle = course.title?.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesLanguage = course.language?.toLowerCase().normalize('NFKC').includes(normalizedQuery);
+        const matchesNotes = course.notes?.toLowerCase().normalize('NFKC').includes(normalizedQuery);
         return matchesName || matchesProfessor || matchesTitle || matchesLanguage || matchesNotes;
       });
     }
-    
-    // 曜日フィルタリング
+
+    // 各種フィルター
     if (dayFilter !== 'すべて') {
-      const dayIndex = dayOptions.indexOf(dayFilter);
-      if (dayIndex > 0) { // 0はすべて
-        console.log(`CoursesScreen: Filtering for dayIndex: ${dayIndex}`);
-        results = results.filter(course => {
-          console.log(`CoursesScreen: Course: ${course.name}, course.dayOfWeek: ${course.dayOfWeek}, Target dayIndex: ${dayIndex}, Match: ${course.dayOfWeek === dayIndex}`);
-          return course.dayOfWeek === dayIndex;
-        });
-      }
+      const dayIndex = dayNameToIndex[dayFilter as keyof typeof dayNameToIndex];
+      results = results.filter(course => course.dayOfWeek === dayIndex);
     }
-    
-    // 時限フィルタリング
     if (periodFilter !== 'すべて') {
       const periodNumber = parseInt(periodFilter.replace('限', ''));
       results = results.filter(course => course.period === periodNumber);
     }
-    
-    // 学期フィルタリング
     if (semesterFilter !== 'すべて') {
       results = results.filter(course => course.semester === semesterFilter);
     }
-    
-    // オンデマンドフィルタリング
-    if (onDemandOnly) {
-      results = results.filter(course => course.onDemand);
+    if (academicYearFilter !== 'すべて') {
+      results = results.filter(course => course.academicYear === academicYearFilter);
     }
     
-    // Temporarily comment out academicYear filter to avoid lint errors
-    // if (academicYearFilter !== 'すべて') {
-    //   results = results.filter(course => course.academicYear === academicYearFilter);
-    // }
+    // オンデマンド授業フィルタリング
+    // onDemandOnlyがtrueならオンデマンドのみ、falseならオンデマンド以外
+    results = results.filter(course => (course.onDemand || false) === onDemandOnly);
     
     setFilteredCourses(results);
   };
@@ -259,11 +249,10 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
               styles.modalOption,
               currentValue === option && styles.selectedOption
             ]}
-            onPress={() => {
-              setValue(option);
-              setVisible(false);
-              handleSearch(searchQuery);
-            }}
+              onPress={() => {
+                setValue(option);
+                setVisible(false);
+              }}
           >
             <Text
               style={[
@@ -359,6 +348,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       </View>
     ) : (
       <FlatList
+        style={{ flex: 1 }}
         data={filteredCourses}
         renderItem={renderCourseCard}
         keyExtractor={(item) => item.id.toString()} 
@@ -376,10 +366,15 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 <View pointerEvents="none">
                   <Searchbar
                     placeholder="科目名、教員名などで検索"
-                    onChangeText={handleSearch}
+                    onChangeText={setSearchQuery}
                     value={searchQuery}
                     style={styles.searchBar}
-                    icon="magnify" // Explicitly set the icon
+                    icon={({ size, color }) => (
+                      <Ionicons name="search" size={size} color={color} />
+                    )}
+                    clearIcon={({ size, color }) => (
+                      <Ionicons name="close-circle" size={size} color={color} />
+                    )}
                     ref={searchbarInputRef as any}
                   />
                 </View>
@@ -453,13 +448,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 <View style={styles.filterColumn} /> 
               </View>
               
-              <Button 
-                mode="contained" 
-                style={styles.searchButton}
-                onPress={() => handleSearch(searchQuery)} // Temporarily revert to handleSearch
-              >
-                検索
-              </Button>
+
             </View>
           </>
         }
