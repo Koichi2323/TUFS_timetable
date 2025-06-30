@@ -422,11 +422,12 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                     onPress={() => setOnDemandOnly(!onDemandOnly)}
                     style={[styles.selectContainer, { height: 40, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, backgroundColor: '#fff' }]}
                   >
-                    <RadioButton
-                      value="onDemand"
-                      status={onDemandOnly ? 'checked' : 'unchecked'}
-                      onPress={() => setOnDemandOnly(!onDemandOnly)}
-                    />
+                    <View pointerEvents="none">
+                      <RadioButton
+                        value="onDemand"
+                        status={onDemandOnly ? 'checked' : 'unchecked'}
+                      />
+                    </View>
                     <Text style={{ marginLeft: 8 }}>オンデマンド</Text>
                   </TouchableOpacity>
                 </View>
