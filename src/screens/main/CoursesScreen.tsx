@@ -27,6 +27,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const [periodFilter, setPeriodFilter] = useState('すべて');
   const [semesterFilter, setSemesterFilter] = useState('すべて'); // This will be "開講学期"
   const [academicYearFilter, setAcademicYearFilter] = useState('すべて'); // New: Academic Year
+  const [facultyFilter, setFacultyFilter] = useState('すべて'); // New: Faculty
   const [onDemandOnly, setOnDemandOnly] = useState(false); // New: On-demand filter
   
   // フィルターモーダル用の状態
@@ -34,6 +35,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const [periodModalVisible, setPeriodModalVisible] = useState(false);
   const [semesterModalVisible, setSemesterModalVisible] = useState(false);
   const [academicYearModalVisible, setAcademicYearModalVisible] = useState(false); // New: Academic Year Modal
+  const [facultyModalVisible, setFacultyModalVisible] = useState(false); // New: Faculty Modal
   
   // スナックバー用の状態
   const [snackbarVisible, setSnackbarVisible] = useState(false);
@@ -52,6 +54,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
   const periodOptions = ['すべて', '1限', '2限', '3限', '4限', '5限', '6限'];
   const semesterOptions = ['すべて', '春学期', '秋学期', '通年']; // Options for "開講学期"
   const academicYearOptions = ['すべて', '2025年度']; // New: Academic Year Options - Filtered to 2025 only
+  const facultyOptions = ['すべて', '国際社会学部', '言語文化学部', '国際日本学部', '世界教養']; // New: Faculty Options
   
   // 曜日と曜日インデックスのマッピング (データ形式に合わせ、月曜:1, 火曜:2, ...とする)
   const dayNameToIndex = {
@@ -72,7 +75,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     if (courses.length > 0) {
       handleSearch();
     }
-  }, [searchQuery, dayFilter, periodFilter, semesterFilter, academicYearFilter, onDemandOnly, courses]);
+  }, [searchQuery, dayFilter, periodFilter, semesterFilter, academicYearFilter, facultyFilter, onDemandOnly, courses]);
 
   const loadCourses = async () => {
     try {
@@ -160,6 +163,9 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
     }
     if (academicYearFilter !== 'すべて') {
       results = results.filter(course => course.academicYear === academicYearFilter);
+    }
+    if (facultyFilter !== 'すべて') {
+      results = results.filter(course => course.faculty && course.faculty.includes(facultyFilter));
     }
     
     // オンデマンド授業フィルタリング
@@ -347,7 +353,8 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
         {renderFilterModal(dayModalVisible, setDayModalVisible, dayOptions, dayFilter, setDayFilter, '曜日を選択')}
         {renderFilterModal(periodModalVisible, setPeriodModalVisible, periodOptions, periodFilter, setPeriodFilter, '時限を選択')}
         {renderFilterModal(semesterModalVisible, setSemesterModalVisible, semesterOptions, semesterFilter, setSemesterFilter, '開講学期を選択')}
-        {renderFilterModal(academicYearModalVisible, setAcademicYearModalVisible, academicYearOptions, academicYearFilter, setAcademicYearFilter, '開講年度を選択')} {/* New: Academic Year Modal */}
+        {renderFilterModal(academicYearModalVisible, setAcademicYearModalVisible, academicYearOptions, academicYearFilter, setAcademicYearFilter, '開講年度を選択')}
+      {renderFilterModal(facultyModalVisible, setFacultyModalVisible, facultyOptions, facultyFilter, setFacultyFilter, '学部を選択')} {/* New: Academic Year Modal */}
       </Portal>
       
       <View style={styles.header}>
@@ -412,7 +419,7 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                   </TouchableOpacity>
                 </View>
                 
-                <View style={styles.filterColumn}>
+                <View style={[styles.filterColumn, { marginRight: 0 }]}>
                   <Text style={styles.filterLabel}>時間帯</Text>
                   <TouchableOpacity
                     style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
@@ -465,7 +472,16 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                   </TouchableOpacity>
                 </View>
                 {/* 右側のカラムが空なら、バランスのために空のViewを置くか、filterColumnのスタイルを調整 */}
-                <View style={styles.filterColumn} /> 
+                <View style={[styles.filterColumn, { marginRight: 0 }]}>
+                  <Text style={styles.filterLabel}>学部</Text>
+                  <TouchableOpacity
+                    style={[styles.selectContainer, styles.select, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12 }]}
+                    onPress={() => setFacultyModalVisible(true)}
+                  >
+                    <Text style={{ fontSize: 16 }}>{facultyFilter}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
+                  </TouchableOpacity>
+                </View>
               </View>
               
 
@@ -601,6 +617,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     height: 40,
   },
+
   searchButton: {
     backgroundColor: '#e75480', 
     marginTop: 6,
