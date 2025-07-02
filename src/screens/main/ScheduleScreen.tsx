@@ -164,7 +164,6 @@ const ScheduleScreen = ({ navigation }: { navigation: any }) => {
       // 元のデータを保持しつつ、変更点だけをマージする場合は以下のようにする
       // ...selectedCourse, // スプレッド構文で元のデータを展開
       // name: editingCourseName,
-      // room: editingRoomName,
       // memo: editingMemo,
       // color: editingColor,
       // day: selectedCourse.day, // 曜日や時限は変更しない想定なら元のまま
@@ -357,17 +356,10 @@ const ScheduleScreen = ({ navigation }: { navigation: any }) => {
           <Card>
             <Card.Title 
               title={selectedCourse.name} 
-              subtitle={selectedCourse.dayOfWeek && selectedCourse.period ? `${days[selectedCourse.dayOfWeek -1]}${selectedCourse.period}限` : ''}
               titleStyle={styles.modalTitle}
-              subtitleStyle={styles.modalSubtitle}
               right={(props) => <Ionicons {...props} name="close-circle" size={24} onPress={() => setModalVisible(false)} style={{marginRight: 10}} />}
             />
             <Card.Content>
-              {selectedCourse.title && <Text style={styles.modalText}>講義題目: {selectedCourse.title}</Text>}
-              {selectedCourse.room && <Text style={styles.modalText}>教室: {selectedCourse.room}</Text>}
-              {selectedCourse.instructor && <Text style={styles.modalText}>担当教員: {selectedCourse.instructor}</Text>}
-
-              {/* Editable Fields */}
               <TextInput
                 label="授業名"
                 value={editingCourseName}
