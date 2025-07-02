@@ -296,27 +296,28 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
       setSnackbarVisible(true);
       return;
     }
-    
-    // 時間割に追加する前に時間帯の重複をチェック
-    let hasConflictCheck = false;
-    if (typeof course.dayOfWeek === 'number' && typeof course.period === 'number') {
-      hasConflictCheck = hasTimeConflict(course.dayOfWeek, course.period);
+
+    // オンデマンド授業（曜日や時限が固定でない）かどうかの判定
+    if (typeof course.dayOfWeek !== 'number' || typeof course.period !== 'number') {
+      // ScheduleScreenにonDemandCourseパラメータを渡して遷移
+      navigation.navigate('Schedule', { 
+      screen: 'ScheduleScreen', 
+      params: { onDemandCourse: course },
+    });
+      return;
     }
-    
+
+    // 通常の授業の場合、時間帯の重複をチェック
+    const hasConflictCheck = hasTimeConflict(course.dayOfWeek, course.period);
     if (hasConflictCheck) {
-      // 時間帯が重複している場合は確認ダイアログを表示
       Alert.alert(
         '時間帯の重複',
         'この授業は他の授業と時間帯が重複しています。追加しますか？',
         [
+          { text: 'キャンセル', style: 'cancel' },
           {
-            text: 'キャンセル',
-            style: 'cancel'
-          },
-          { 
-            text: '追加する', 
+            text: '追加する',
             onPress: async () => {
-              // 確認後に追加
               const result = await addCourse(course);
               if (result.success) {
                 setSnackbarMessage(`${course.name}を時間割に追加しました`);
@@ -324,8 +325,8 @@ const CoursesScreen = ({ navigation, toggleTheme, isDarkMode }: CoursesScreenPro
                 setSnackbarMessage(`${course.name}の追加に失敗しました。ログイン状態などを確認してください。${result.conflictCourse ? ' 時間重複の可能性があります。' : ''}`);
               }
               setSnackbarVisible(true);
-            } 
-          }
+            },
+          },
         ]
       );
     } else {

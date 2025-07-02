@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Linking } from 'react-native';
-import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native'; // Alert を削除
-import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal, Portal, Dialog, Paragraph, TextInput } from 'react-native-paper'; // Portal, Dialog, Paragraph を追加
+import { Linking, Alert } from 'react-native';
+import { SafeAreaView, View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { Text, useTheme, Card, ActivityIndicator, Button, FAB, Snackbar, Modal, Portal, Dialog, Paragraph, TextInput } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSchedule } from '../../context/ScheduleContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Course } from '../../types';
+
+type ScheduleRouteParams = {
+  Schedule: {
+    onDemandCourse?: Course;
+  };
+};
+
+type ScheduleScreenRouteProp = RouteProp<ScheduleRouteParams, 'Schedule'>;
 
 type ScheduleScreenProps = {
   navigation: any;
@@ -13,7 +22,8 @@ type ScheduleScreenProps = {
   isDarkMode: boolean;
 };
 
-const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenProps) => {
+const ScheduleScreen = ({ navigation }: { navigation: any }) => {
+  const theme = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,13 +32,16 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [courseIdToDelete, setCourseIdToDelete] = useState<string | null>(null);
 
+  const [daySelectionModalVisible, setDaySelectionModalVisible] = useState(false);
+  const [onDemandCourseToAdd, setOnDemandCourseToAdd] = useState<Course | null>(null);
+
   // States for editing course details in modal
   const [editingCourseName, setEditingCourseName] = useState('');
   const [editingRoomName, setEditingRoomName] = useState('');
   const [editingMemo, setEditingMemo] = useState('');
   const [editingColor, setEditingColor] = useState<string | undefined>(undefined);
   
-  const theme = useTheme();
+  const route = useRoute<ScheduleScreenRouteProp>();
   const screenWidth = Dimensions.get('window').width;
   const insets = useSafeAreaInsets();
   
@@ -39,24 +52,7 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
   const days = ['月', '火', '水', '木', '金'];
   
   // Predefined colors for courses (from ColorPicker.tsx)
-  const predefinedCourseColors = [
-    '#6200ee', // Purple (Primary)
-    '#3f51b5', // Indigo
-    '#2196f3', // Blue
-    '#03a9f4', // Light Blue
-    '#00bcd4', // Cyan
-    '#009688', // Teal
-    '#4caf50', // Green
-    '#8bc34a', // Light Green
-    '#cddc39', // Lime
-    '#ffeb3b', // Yellow
-    '#ffc107', // Amber
-    '#ff9800', // Orange
-    '#ff5722', // Deep Orange
-    '#f44336', // Red
-    '#e91e63', // Pink
-    '#9c27b0', // Purple
-  ];
+  const predefinedCourseColors = ['#000000', '#008080', '#008000', '#483d8b', '#696969', '#a0522d', '#b22222', '#dc143c', '#4169e1', '#6a5acd', '#6495ed'];
 
   // 6限の授業が登録されているか確認
   const hasSixthPeriod = useMemo(() => 
@@ -76,17 +72,46 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
     : { 1: '08:30', 2: '10:10', 3: '12:40', 4: '14:20', 5: '16:00' };
 
   useEffect(() => {
+    if (route.params?.onDemandCourse) {
+      const course = route.params.onDemandCourse;
+      if (isCourseAdded(course.id)) {
+        setSnackbarMessage('この授業はすでに時間割に追加されています');
+        setSnackbarVisible(true);
+      } else {
+        setOnDemandCourseToAdd(course);
+        setDaySelectionModalVisible(true);
+      }
+      navigation.setParams({ onDemandCourse: undefined });
+    }
+  }, [route.params?.onDemandCourse]);
+
+  useEffect(() => {
     // ユーザーの授業が読み込まれたらローディングを終了
     setLoading(false);
   }, [userCourses]);
 
-  const getCourseByDayAndPeriod = (day: number, period: number): Course | undefined => {
-    //引数 day (0-indexed) を 1-indexed に変換して比較
-    const targetDayOfWeek = day + 1; 
-    const foundCourse = userCourses.find(course => 
+  const handleDaySelection = async (dayIndex: number) => {
+    if (!onDemandCourseToAdd) return;
+    const dayOfWeek = dayIndex + 1;
+    // オンデマンド授業は6限に固定
+    const newCourse = { ...onDemandCourseToAdd, dayOfWeek, period: 6 };
+    
+    const result = await addCourse(newCourse);
+    if (result.success) {
+      setSnackbarMessage(`${newCourse.name}を${days[dayIndex]}曜6限に追加しました`);
+    } else {
+      setSnackbarMessage('授業の追加に失敗しました');
+    }
+    setSnackbarVisible(true);
+    setDaySelectionModalVisible(false);
+    setOnDemandCourseToAdd(null);
+  };
+
+  const getCoursesByDayAndPeriod = (day: number, period: number): Course[] => {
+    const targetDayOfWeek = day + 1;
+    return userCourses.filter(course => 
       course.dayOfWeek === targetDayOfWeek && course.period === period
     );
-    return foundCourse;
   };
   
   // 授業削除ダイアログ表示の準備
@@ -115,7 +140,7 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
     setCourseIdToDelete(null);     // 削除対象IDをクリア
   };
 
-  const handleCellPress = (course: Course | undefined) => {
+  const handleCellPress = (course: Course) => {
     if (course) {
       setSelectedCourse(course);
       // Initialize editing states
@@ -201,33 +226,39 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
               <View key={periodIndex} style={styles.periodContainer}>
                 <View style={styles.periodRow}>
                   {days.map((dayString, dayIndex) => {
-                    const course = getCourseByDayAndPeriod(dayIndex, period);
+                    const courses = getCoursesByDayAndPeriod(dayIndex, period);
                     return (
-                      <TouchableOpacity 
-                        key={`cell-${dayIndex}-${period}`}
-                        style={[styles.courseCellTouchable, { width: columnWidth }]}
-                        onPress={() => {
-                          if (course) handleCellPress(course);
-                        }}
-                        activeOpacity={course ? 0.7 : 1}
-                      >
-                        {course ? (
-                          <View style={styles.courseCellCard}>
-                            {course.room && (
-                              <View style={[styles.roomContainer, { backgroundColor: course.color || '#A0A0A0' }]}>
-                                <Text style={styles.roomText} numberOfLines={1}>{course.room}</Text>
-                              </View>
-                            )}
-                            <View style={styles.courseNameContainer}>
-                              <Text style={styles.courseNameText} numberOfLines={3}>
-                                {course.name}
-                              </Text>
-                            </View>
+                      <View key={`cell-${dayIndex}-${period}`} style={[styles.courseCellTouchable, { width: columnWidth }]}>
+                        {courses.length > 0 ? (
+                          <View style={styles.stackedCourseContainer}>
+                            {courses.map((course, index) => (
+                              <TouchableOpacity
+                                key={course.id}
+                                style={[
+                                  styles.courseCellCard,
+                                  courses.length > 1 && styles.stackedCourseCard
+                                ]}
+                                onPress={() => handleCellPress(course)}
+                                onLongPress={() => handleRemoveCourse(course.id)}
+                                activeOpacity={0.7}
+                              >
+                                {course.room && (
+                                  <View style={[styles.roomContainer, { backgroundColor: course.color || '#A0A0A0' }]}>
+                                    <Text style={[styles.roomText, courses.length > 1 && styles.stackedRoomText]} numberOfLines={1}>{course.room}</Text>
+                                  </View>
+                                )}
+                                <View style={styles.courseNameContainer}>
+                                  <Text style={[styles.courseNameText, courses.length > 1 && styles.stackedCourseNameText]} numberOfLines={courses.length > 1 ? 2 : 3}>
+                                    {course.name}
+                                  </Text>
+                                </View>
+                              </TouchableOpacity>
+                            ))}
                           </View>
                         ) : (
                           <View style={styles.emptyCourseCellCard} />
                         )}
-                      </TouchableOpacity>
+                      </View>
                     );
                   })}
                 </View>
@@ -265,6 +296,31 @@ const ScheduleScreen = ({ navigation, toggleTheme, isDarkMode }: ScheduleScreenP
       )}
       </View>
       <Portal>
+        <Modal visible={daySelectionModalVisible} onDismiss={() => setDaySelectionModalVisible(false)} contentContainerStyle={styles.daySelectionModalContainer}>
+          <Card style={styles.daySelectionCard}>
+            <Card.Title 
+              title="曜日を選択" 
+              titleStyle={styles.daySelectionTitle}
+            />
+            <Card.Content style={styles.daySelectionContent}>
+              {days.map((day, index) => (
+                <Button 
+                  key={day} 
+                  mode="outlined"
+                  onPress={() => handleDaySelection(index)}
+                  style={[styles.daySelectionButton, { borderColor: theme.colors.primary }]}
+                  labelStyle={[styles.daySelectionButtonText, { color: theme.colors.primary }]}
+                >
+                  {day}曜日
+                </Button>
+              ))}
+            </Card.Content>
+            <Card.Actions style={styles.daySelectionActions}>
+                <Button onPress={() => setDaySelectionModalVisible(false)}>キャンセル</Button>
+            </Card.Actions>
+          </Card>
+        </Modal>
+
         <Dialog 
           visible={deleteDialogVisible} 
           onDismiss={() => setDeleteDialogVisible(false)}
@@ -570,6 +626,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: '#f06292',
   },
+
   snackbar: {
     backgroundColor: '#333',
   },
@@ -635,6 +692,55 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: 15,
     marginBottom: 10,
+  },
+  stackedCourseContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+  },
+  stackedCourseCard: {
+    flex: 1,
+    minHeight: 40,
+    marginBottom: 2,
+  },
+  stackedRoomText: {
+    fontSize: 9,
+  },
+  stackedCourseNameText: {
+    fontSize: 9,
+    lineHeight: 11,
+  },
+  daySelectionModalContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  daySelectionCard: {
+    width: '85%',
+    maxWidth: 350,
+    borderRadius: 12,
+  },
+  daySelectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+
+  daySelectionContent: {
+    paddingTop: 16,
+  },
+  daySelectionButton: {
+    marginVertical: 6,
+    borderRadius: 8,
+    paddingVertical: 4,
+    borderWidth: 1.5,
+  },
+  daySelectionButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  daySelectionActions: {
+    justifyContent: 'flex-end',
+    paddingRight: 8,
   },
 });
 
