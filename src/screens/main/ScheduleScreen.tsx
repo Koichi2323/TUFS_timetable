@@ -7,6 +7,7 @@ import { useRoute, RouteProp } from '@react-navigation/native';
 import { useSchedule } from '../../context/ScheduleContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Course } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type ScheduleRouteParams = {
   Schedule: {
@@ -31,6 +32,8 @@ const ScheduleScreen = ({ navigation }: { navigation: any }) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [courseIdToDelete, setCourseIdToDelete] = useState<string | null>(null);
+
+  const [updateDialogVisible, setUpdateDialogVisible] = useState(false);
 
   const [daySelectionModalVisible, setDaySelectionModalVisible] = useState(false);
   const [onDemandCourseToAdd, setOnDemandCourseToAdd] = useState<Course | null>(null);
@@ -89,6 +92,32 @@ const ScheduleScreen = ({ navigation }: { navigation: any }) => {
     // ユーザーの授業が読み込まれたらローディングを終了
     setLoading(false);
   }, [userCourses]);
+
+  const UPDATE_NOTICE_KEY = '@updateNotice_v20250702'; // Unique key for this update
+
+  useEffect(() => {
+    const checkUpdateNotice = async () => {
+      try {
+        const hasSeenNotice = await AsyncStorage.getItem(UPDATE_NOTICE_KEY);
+        if (!hasSeenNotice) {
+          setUpdateDialogVisible(true);
+        }
+      } catch (e) {
+        console.error("Failed to read update notice status from AsyncStorage", e);
+      }
+    };
+    checkUpdateNotice();
+  }, []);
+
+  const handleDismissUpdateDialog = async () => {
+    try {
+      await AsyncStorage.setItem(UPDATE_NOTICE_KEY, 'true');
+      setUpdateDialogVisible(false);
+    } catch (e) {
+      console.error("Failed to save update notice status to AsyncStorage", e);
+      setUpdateDialogVisible(false); // Still close the dialog
+    }
+  };
 
   const handleDaySelection = async (dayIndex: number) => {
     if (!onDemandCourseToAdd) return;
@@ -346,7 +375,25 @@ const ScheduleScreen = ({ navigation }: { navigation: any }) => {
         {snackbarMessage}
       </Snackbar>
 
-      {/* Course Detail Modal */}
+      {/* Update Notice Dialog */}
+    <Portal>
+      <Dialog visible={updateDialogVisible} onDismiss={handleDismissUpdateDialog}>
+        <Dialog.Title>🔔 機能アップデート 🔔</Dialog.Title>
+        <Dialog.Content>
+          <Paragraph>・オンデマンド授業が追加可能に！</Paragraph>
+          <Paragraph>・授業の色をより見やすく改善！</Paragraph>
+          <Paragraph style={{ marginBottom: 16 }}>・学部で授業検索ができるように！</Paragraph>
+          <Paragraph style={{ fontSize: 12, color: theme.colors.onSurfaceVariant, marginBottom: 16 }}>※反映されていない場合は、アプリのタブを一度消して再度開いてください。</Paragraph>
+          <Paragraph>💡 機能のアイデアやお問い合わせは、</Paragraph>
+          <Paragraph>「設定」＞「お問い合わせ」からどうぞ！</Paragraph>
+        </Dialog.Content>
+        <Dialog.Actions>
+          <Button onPress={handleDismissUpdateDialog}>閉じる</Button>
+        </Dialog.Actions>
+      </Dialog>
+    </Portal>
+
+    {/* Course Detail Modal */}
       {selectedCourse && (
         <Modal
           visible={modalVisible}
